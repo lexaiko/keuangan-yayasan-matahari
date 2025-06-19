@@ -2,36 +2,37 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Login;
-use App\Models\User;
-use App\Settings\KaidoSetting;
-use Filament\Http\Middleware\Authenticate;
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
-use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
-use DutchCodingCompany\FilamentSocialite\Provider;
-use Filament\Forms\Components\FileUpload;
-use Filament\Http\Middleware\DisableBladeIconComponents;
-use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
-use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
+use App\Models\User;
 use Filament\Widgets;
-use Hasnayeen\Themes\Http\Middleware\SetTheme;
+use Filament\PanelProvider;
+use App\Filament\Pages\Login;
+use App\Settings\KaidoSetting;
+use Filament\Support\Colors\Color;
 use Hasnayeen\Themes\ThemesPlugin;
-use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Schema;
+use Filament\Forms\Components\FileUpload;
+use Rupadana\ApiService\ApiServicePlugin;
+use Filament\Http\Middleware\Authenticate;
+use Jeffgreco13\FilamentBreezy\BreezyCore;
+use Hasnayeen\Themes\Http\Middleware\SetTheme;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use DutchCodingCompany\FilamentSocialite\Provider;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Jeffgreco13\FilamentBreezy\BreezyCore;
-use Rupadana\ApiService\ApiServicePlugin;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
 
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Laravel\Socialite\Contracts\User as SocialiteUserContract;
-use Illuminate\Contracts\Auth\Authenticatable;
-use Illuminate\Support\Facades\Schema;
+use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -52,6 +53,7 @@ class AdminPanelProvider extends PanelProvider
 
     public function panel(Panel $panel): Panel
     {
+        URL::forceScheme('https');
         return $panel
             ->default()
             ->id('admin')
