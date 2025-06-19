@@ -17,9 +17,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
-        parent::register();
-        FilamentView::registerRenderHook('panels::body.end', fn(): string => Blade::render("@vite('resources/js/app.js')"));
     }
 
     /**
@@ -31,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') === 'production') {
         URL::forceScheme('https');
     }
+
+        FilamentView::registerRenderHook(
+            'panels::body.end',
+            fn (): string => Blade::render("@vite('resources/js/app.js')")
+        );
         //
         Gate::define('viewApiDocs', function (User $user) {
             return true;
