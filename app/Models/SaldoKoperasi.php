@@ -36,19 +36,32 @@ class SaldoKoperasi extends Model
         return $masuk - $keluar;
     }
 
-    // 🧮 Menghitung saldo tabungan khusus user tertentu
-    public static function getSaldoTabunganByUser($userId): float
-    {
-        $masuk = static::where('pelaku_terkait_id', $userId)
-            ->where('kategori', 'tabungan')
-            ->where('tipe', 'masuk')
-            ->sum('jumlah');
+    public static function getSummaryMasukKeluar(): array
+{
+    $masuk = static::where('tipe', 'masuk')->sum('jumlah');
+    $keluar = static::where('tipe', 'keluar')->sum('jumlah');
 
-        $keluar = static::where('pelaku_terkait_id', $userId)
-            ->where('kategori', 'tabungan')
-            ->where('tipe', 'keluar')
-            ->sum('jumlah');
+    return [
+        'Masuk' => $masuk,
+        'Keluar' => $keluar,
+    ];
+}
 
-        return $masuk - $keluar;
-    }
+    public static function getSaldoPerPegawai()
+{
+    return static::select('pelaku_terkait_id')
+        ->selectRaw('SUM(CASE WHEN tipe = "masuk" THEN jumlah ELSE 0 END) as total_masuk')
+        ->selectRaw('SUM(CASE WHEN tipe = "keluar" THEN jumlah ELSE 0 END) as total_keluar')
+        ->groupBy('pelaku_terkait_id')
+        ->havingRaw('SUM(CASE WHEN tipe = "masuk" THEN jumlah ELSE 0 END) - SUM(CASE WHEN tipe = "keluar" THEN jumlah ELSE 0 END) > 0')
+        ->with('pelakuTerkait') // relasi ke tabel users
+        ->get()
+        ->map(function ($item) {
+            return [
+                'user' => $item->pelakuTerkait,
+                'saldo' => $item->total_masuk - $item->total_keluar,
+            ];
+        });
+}
+
 }

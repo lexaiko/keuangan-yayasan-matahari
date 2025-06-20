@@ -74,8 +74,18 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
+                //baris pertama
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
+                //baris kedua
+                \App\Filament\Resources\AdminResource\Widgets\SaldoKoperasiWidget::class,
+                //baris ketika
+                \App\Filament\Resources\AdminResource\Widgets\SaldoBatangWidget::class,
+                \App\Filament\Resources\AdminResource\Widgets\FilterSaldoKoperasiWidget::class,
+                //baris keempat
+                \App\Filament\Resources\AdminResource\Widgets\SaldoTableWidget::class,
+
+
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -100,6 +110,7 @@ class AdminPanelProvider extends PanelProvider
             )
             ->databaseNotifications();
     }
+
 
     private function getPlugins(): array
     {
