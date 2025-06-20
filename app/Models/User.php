@@ -83,4 +83,20 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     {
         return true;
     }
+
+    public function pinjaman()
+    {
+    return $this->hasMany(PinjamanUser::class);
+    }
+
+    // relasi ke SaldoKoperasi
+    public function saldoKoperasi()
+    {
+        return $this->hasMany(SaldoKoperasi::class, 'pelaku_terkait_id');
+    }
+
+    public function logTransaksi()
+    {
+    return $this->hasMany(LogTransaksiKoperasi::class);
+    }
 }
