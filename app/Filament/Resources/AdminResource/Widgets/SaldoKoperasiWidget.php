@@ -9,7 +9,6 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 class SaldoKoperasiWidget extends BaseWidget
 {
 
-    protected int|string|array $columnSpan = '2';
 
 
     protected function getCards(): array

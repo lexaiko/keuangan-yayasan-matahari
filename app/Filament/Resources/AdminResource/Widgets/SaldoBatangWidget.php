@@ -9,8 +9,6 @@ use Filament\Widgets\ChartWidget;
 class SaldoBatangWidget extends ChartWidget
 {
 
-    protected int|string|array $columnSpan = '1'; // bar chart satu baris penuh
-
     protected static ?string $heading = 'Perbandingan Saldo Masuk & Keluar';
 
     protected function getData(): array

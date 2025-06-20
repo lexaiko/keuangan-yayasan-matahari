@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 class FilterSaldoKoperasiWidget extends PieChartWidget
 {
     protected static ?string $heading = 'Komposisi Saldo Tabungan Pegawai';
-    protected int|string|array $columnSpan = '1';
+
 
     protected static ?array $options = [
         'legend' => ['position' => 'right'],

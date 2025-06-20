@@ -9,8 +9,6 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class SaldoTableWidget extends BaseWidget
 {
-    protected int|string|array $columnSpan = '1'; // bar chart satu baris penuh
-
 
     protected static ?string $heading = 'History Tabungan Pegawai';
     public function table(Table $table): Table
