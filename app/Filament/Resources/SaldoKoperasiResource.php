@@ -69,7 +69,7 @@ class SaldoKoperasiResource extends Resource
                 ->color(fn ($state) => $state === 'masuk' ? 'success' : 'danger'),
             TextColumn::make('jumlah')->money('IDR'),
             TextColumn::make('keterangan')->wrap(),
-        ])->defaultSort('tanggal', 'desc')  // Changed from 'desc' to 'asc' for newest data first
+        ])->defaultSort('created_at', 'desc')  // Changed from 'desc' to 'asc' for newest data first
         ->filters([
             SelectFilter::make('tipe')
                 ->options([
