@@ -84,6 +84,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Resources\AdminResource\Widgets\FilterSaldoKoperasiWidget::class,
                 //baris keempat
                 \App\Filament\Resources\AdminResource\Widgets\SaldoTableWidget::class,
+                \App\Filament\Resources\AdminResource\Widgets\SaldoAllTableWidget::class,
 
 
             ])
