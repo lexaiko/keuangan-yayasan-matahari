@@ -6,7 +6,7 @@ Dikembangkan sebagai fondasi profesional menggunakan **Kaido Kit**: starter kit 
 
 ![GitHub stars](https://img.shields.io/github/stars/lexaiko/Sistem-Informasi-Manajemen-Keuangan-Yayasan?style=flat-square)
 ![PHP Version](https://img.shields.io/badge/PHP-8.2-blue?style=flat-square&logo=php)
-![Laravel Version](https://img.shields.io/badge/Laravel-11.0-red?style=flat-square&logo=laravel)
+![Laravel Version](https://img.shields.io/badge/Laravel-12.0-red?style=flat-square&logo=laravel)
 ![Filament Version](https://img.shields.io/badge/Filament-3.2-purple?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
 
