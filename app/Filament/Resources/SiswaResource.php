@@ -56,9 +56,9 @@ class SiswaResource extends Resource
                     ->required()
                     ->searchable()
                     ->preload(),
-                TextInput::make('nis')->maxLength(100),
-                TextInput::make('nisn')->maxLength(100),
-                TextInput::make('nik')->maxLength(100),
+                TextInput::make('nis')->maxLength(100)->unique(),
+                TextInput::make('nisn')->maxLength(100)->unique(),
+                TextInput::make('nik')->maxLength(100)->unique(),
                 TextInput::make('tempat_lahir')->maxLength(100),
                 DatePicker::make('tanggal_lahir'),
                 Select::make('jenis_kelamin')
@@ -76,8 +76,10 @@ class SiswaResource extends Resource
                     ->label('Status')
                     ->options([
                         '1' => 'Aktif',
-                        '2' => 'Cuti',
-                        '3' => 'Lulus',
+                        '2' => 'Baru',
+                        '3' => 'Pindahan',
+                        '4' => 'keluar',
+                        '5' => 'Lulus',
                     ])
                     ->default('1')
                     ->required()
@@ -108,14 +110,18 @@ class SiswaResource extends Resource
                     ->label('Status')
                     ->formatStateUsing(fn($state) => match ($state) {
                         '1' => 'Aktif',
-                        '2' => 'Cuti',
-                        '3' => 'Lulus',
+                        '2' => 'Baru',
+                        '3' => 'Pindahan',
+                        '4' => 'Keluar',
+                        '5' => 'Lulus',
                         default => 'Tidak Diketahui',
                     })
                     ->color(fn($state) => match ($state) {
                         '1' => 'success',
-                        '2' => 'warning',
+                        '2' => 'secondary',
                         '3' => 'info',
+                        '4' => 'danger',
+                        '5' => 'warning',
                         default => 'gray',
                     }),
             ])
@@ -127,6 +133,15 @@ class SiswaResource extends Resource
                     })
                     ->searchable()
                     ->label('Kelas'),
+                SelectFilter::make('status')
+                    ->options([
+                        '1' => 'Aktif',
+                        '2' => 'Baru',
+                        '3' => 'Pindahan',
+                        '4' => 'Keluar',
+                        '5' => 'Lulus',
+                    ])
+                    ->label('Status'),
             ])
             ->actions([
                 EditAction::make(),
@@ -140,8 +155,10 @@ class SiswaResource extends Resource
                 ->label('Status')
                 ->options([
                     '1' => 'Aktif',
-                    '2' => 'Cuti',
-                    '3' => 'Lulus',
+                    '2' => 'Baru',
+                    '3' => 'Pindahan',
+                    '4' => 'keluar',
+                    '5' => 'Lulus',
                 ])
                 ->default('1')
                 ->required()
@@ -221,14 +238,18 @@ class SiswaResource extends Resource
                                     ->badge()
                                     ->formatStateUsing(fn(string $state) => match ($state) {
                                         '1' => 'Aktif',
-                                        '2' => 'Cuti',
-                                        '3' => 'Lulus',
+                                        '2' => 'Baru',
+                                        '3' => 'Pindahan',
+                                        '4' => 'keluar',
+                                        '5' => 'Lulus',
                                         default => 'Tidak diketahui',
                                     })
                                     ->color(fn(string $state): string => match ($state) {
                                         '1' => 'success',
                                         '2' => 'warning',
                                         '3' => 'info',
+                                        '4' => 'danger',
+                                        '5' => 'info',
                                         default => 'gray',
                                     }),
                             ])

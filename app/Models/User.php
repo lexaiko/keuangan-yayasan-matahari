@@ -16,7 +16,7 @@ use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles, TwoFactorAuthenticatable, HasApiTokens;
@@ -81,13 +81,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return (str_ends_with($this->email, '@gmail.com') ||
+            str_ends_with($this->email, '@outlook.com') ||
+            str_ends_with($this->email, '@admin.com'));
     }
 
     public function pinjaman()
     {
     return $this->hasMany(PinjamanUser::class);
     }
+
 
     // relasi ke SaldoKoperasi
     public function saldoKoperasi()
@@ -98,5 +101,9 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     public function logTransaksi()
     {
     return $this->hasMany(LogTransaksiKoperasi::class);
+    }
+    public function pembayarans()
+    {
+        return $this->hasMany(Pembayaran::class);
     }
 }

@@ -23,4 +23,9 @@ class TahunAkademik extends Model
     {
         return $this->hasMany(Kelas::class, 'tahun_id');
     }
+    public function tagihan()
+{
+    return $this->hasMany(Tagihan::class);
+}
+
 }
