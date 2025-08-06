@@ -1,6 +1,6 @@
 # ☀️ Sistem Informasi Manajemen Keuangan Yayasan Matahari
 
-Sistem informasi ini dibangun dengan Laravel 11 & FilamentPHP untuk mendukung **transparansi, efisiensi, dan akuntabilitas keuangan** pada Yayasan Matahari — sebuah yayasan edukasi dan sosial yang berlokasi di Banyuwangi.
+Sistem informasi ini dibangun dengan Laravel 12 & FilamentPHP untuk mendukung **transparansi, efisiensi, dan akuntabilitas keuangan** pada Yayasan Matahari — sebuah yayasan edukasi dan sosial yang berlokasi di Banyuwangi.
 
 Dikembangkan sebagai fondasi profesional menggunakan **Kaido Kit**: starter kit FilamentPHP dengan fitur siap pakai untuk pengelolaan keuangan berbasis web.
 
