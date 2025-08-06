@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pembayaran_details', function (Blueprint $table) {
+        Schema::create('detail_pembayarans', function (Blueprint $table) {
     $table->id();
     $table->foreignUuid('pembayaran_id')->constrained('pembayarans')->onDelete('cascade');
     $table->foreignId('tagihan_id')->constrained('tagihan')->onDelete('cascade');

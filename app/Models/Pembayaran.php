@@ -3,25 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
 class Pembayaran extends Model
 {
-    use HasUuids;
-
     protected $table = 'pembayarans';
     protected $primaryKey = 'id';
-    public $incrementing = false; // Karena pakai UUID
+    public $incrementing = false; // Karena pakai custom ID
     protected $keyType = 'string';
 
     protected $fillable = [
         'id',
         'siswa_id',
-        'tagihan_id',
         'user_id',
         'jumlah_bayar',
         'tanggal_bayar',
         'keterangan',
+        'tunai',
+        'kembalian',
     ];
 
 
@@ -46,6 +44,12 @@ class Pembayaran extends Model
         });
     }
 
+    // Method untuk route key binding
+    public function getRouteKeyName()
+    {
+        return 'id';
+    }
+
     // Relasi ke Siswa
     public function siswa()
     {
@@ -63,7 +67,7 @@ class Pembayaran extends Model
     {
         return $this->belongsTo(User::class);
     }
-    public function detailPembayaran()
+    public function detailPembayarans()
     {
         return $this->hasMany(DetailPembayaran::class);
     }

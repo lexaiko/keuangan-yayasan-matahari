@@ -58,7 +58,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->spa()
+            // ->spa()
             ->brandName('Yayasan Matahari')
             ->when($this->settings->login_enabled ?? true, fn($panel) => $panel->login(Login::class))
             ->when($this->settings->registration_enabled ?? true, fn($panel) => $panel->registration())

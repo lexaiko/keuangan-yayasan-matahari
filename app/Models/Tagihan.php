@@ -13,6 +13,11 @@ class Tagihan extends Model
 {
     protected $table = 'tagihan';
 
+    // Konstanta untuk status
+    const STATUS_BELUM_BAYAR = 'belum_bayar';
+    const STATUS_SEBAGIAN = 'sebagian';
+    const STATUS_LUNAS = 'lunas';
+
     protected $fillable = [
         'siswa_id',
         'jenis_pembayaran_id',
@@ -33,6 +38,11 @@ class Tagihan extends Model
     {
         return $this->belongsTo(JenisPembayaran::class);
     }
+
+    public function getNamaPembayaranAttribute()
+{
+    return $this->jenisPembayaran?->nama_pembayaran ?? '-';
+}
 
     public function tahunAkademik()
     {
