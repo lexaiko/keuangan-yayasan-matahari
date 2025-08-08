@@ -3,50 +3,70 @@
 namespace App\Filament\Resources;
 
 use App\Models\User;
-use Filament\Tables;
+use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Tables\Table;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Forms\Components\Select;
-use App\Filament\Exports\UserExporter;
-use App\Filament\Imports\UserImporter;
-use Filament\Forms\Components\Section;
-use Filament\Support\Enums\FontWeight;
-use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\ExportAction;
-use Filament\Tables\Actions\ImportAction;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Tables\Actions\ExportBulkAction;
+use Filament\Tables;
+use Filament\Tables\Table;
 use App\Filament\Resources\UserResource\Pages;
-use STS\FilamentImpersonate\Tables\Actions\Impersonate;
+use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section as InfolistSection;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
+use Filament\Tables\Filters\TernaryFilter;
+use App\Filament\Exports\UserExporter;
+use Filament\Tables\Actions\ExportBulkAction;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationLabel = 'Data Pegawai';
     protected static ?string $pluralLabel = 'Data Pegawai';
-    protected static ?int $navigationSort = -7;
     protected static ?string $navigationGroup = 'Master Data';
+    protected static ?int $navigationSort = -5;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Section::make(
-                    'User Information'
-                )->schema([
-                            TextInput::make('name')
-                                ->required(),
-                            TextInput::make('email')
-                                ->required(),
-                            TextInput::make('password')
-                                ->required(),
-                        ]),
+                Forms\Components\Section::make('Informasi Pegawai')
+                    ->schema([
+                        TextInput::make('name')
+                            ->label('Nama')
+                            ->required()
+                            ->maxLength(255),
+
+                        TextInput::make('email')
+                            ->label('Email')
+                            ->email()
+                            ->required()
+                            ->maxLength(255),
+
+                        TextInput::make('password')
+                            ->label('Password')
+                            ->password()
+                            ->required(fn (string $context): bool => $context === 'create')
+                            ->maxLength(255),
+
+                        Toggle::make('is_pegawai')
+                            ->label('Adalah Pegawai')
+                            ->default(true),
+
+                        TextInput::make('gaji_bulanan')
+                            ->label('Gaji Bulanan')
+                            ->numeric()
+                            ->prefix('Rp')
+                            ->default(0),
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -54,74 +74,43 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\Layout\Split::make([
-                    Tables\Columns\ImageColumn::make('avatar_url')
-                        ->searchable()
-                        ->circular()
-                        ->grow(false)
-                        ->getStateUsing(fn($record) => $record->avatar_url
-                            ? $record->avatar_url
-                            : "https://ui-avatars.com/api/?name=" . urlencode($record->name)),
-                    Tables\Columns\TextColumn::make('name')
-                        ->searchable()
-                        ->weight(FontWeight::Bold),
-                    Tables\Columns\Layout\Stack::make([
-                        Tables\Columns\TextColumn::make('roles.name')
-                            ->searchable()
-                            ->icon('heroicon-o-shield-check')
-                            ->grow(false),
-                        Tables\Columns\TextColumn::make('email')
-                            ->icon('heroicon-m-envelope')
-                            ->searchable()
-                            ->grow(false),
-                    ])->alignStart()->visibleFrom('lg')->space(1)
-                ]),
+                TextColumn::make('name')
+                    ->label('Nama')
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('email')
+                    ->label('Email')
+                    ->searchable(),
+
+                ToggleColumn::make('is_pegawai')
+                    ->label('Pegawai'),
+
+                TextColumn::make('gaji_bulanan')
+                    ->label('Gaji Bulanan')
+                    ->money('IDR')
+                    ->sortable(),
+
+                TextColumn::make('created_at')
+                    ->label('Dibuat')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
-                SelectFilter::make('roles')
-                    ->relationship('roles', 'name')
-                    ->multiple()
-                    ->preload(),
+                TernaryFilter::make('is_pegawai')
+                    ->label('Pegawai'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
-                Action::make('Set Role')
-                    ->icon('heroicon-m-adjustments-vertical')
-                    ->form([
-                        Select::make('role')
-                            ->relationship('roles', 'name')
-                            ->multiple()
-                            ->required()
-                            ->searchable()
-                            ->preload()
-                            ->optionsLimit(10)
-                            ->getOptionLabelFromRecordUsing(fn($record) => $record->name),
-                    ]),
-                // Impersonate::make(),
-                Tables\Actions\DeleteAction::make(),
-            ])
-            ->headerActions([
-                ExportAction::make()
-                    ->exporter(UserExporter::class),
-                ImportAction::make()
-                    ->importer(UserImporter::class)
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
                 ExportBulkAction::make()
-                    ->exporter(UserExporter::class)
-            ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
+                    ->exporter(UserExporter::class),
+                DeleteBulkAction::make(),
+            ])
+            ->defaultSort('name');
     }
 
     public static function getPages(): array
@@ -133,6 +122,14 @@ class UserResource extends Resource
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
@@ -144,3 +141,4 @@ class UserResource extends Resource
             ]);
     }
 }
+

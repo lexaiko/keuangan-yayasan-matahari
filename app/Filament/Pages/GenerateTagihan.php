@@ -45,7 +45,9 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
                 ->schema([
                     Forms\Components\Select::make('kelas')
                         ->label('Kelas')
-                        ->options(Kelas::all()->pluck('nama', 'id'))
+                        ->options(Kelas::with('tingkat')->get()->mapWithKeys(function ($kelas) {
+                            return [$kelas->id => $kelas->nama . ' (' . $kelas->tingkat->nama . ')'];
+                        }))
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($state, callable $set) {
@@ -62,7 +64,7 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
                         ->schema([
                             Select::make('jenis_pembayaran_id')
                                 ->label('Jenis Pembayaran')
-                                ->options(JenisPembayaran::all()->pluck('nama_pembayaran', 'id'))
+                                ->options(JenisPembayaran::pluck('nama_pembayaran', 'id'))
                                 ->required()
                                 ->reactive()
                                 ->afterStateUpdated(function ($state, callable $set, callable $get) {
@@ -102,7 +104,7 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
                                 ->prefix('Rp')
                                 ->required(),
 
-                            DatePicker::make('tanggal_jatuh_tempo')
+                            Forms\Components\DatePicker::make('tanggal_jatuh_tempo')
                                 ->label('Tanggal Jatuh Tempo')
                                 ->required()
                                 ->default(now()->addDays(30)),
@@ -166,7 +168,13 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
             DB::beginTransaction();
 
             $siswaList = Siswa::where('kelas_id', $data['kelas'])->get();
-            $tahunAkademikId = Kelas::findOrFail($data['kelas'])->tahun?->id;
+            $kelas = Kelas::findOrFail($data['kelas']);
+            $tahunAkademikId = $kelas->tahun?->id;
+
+            if (!$tahunAkademikId) {
+                throw new \Exception('Kelas tidak memiliki tahun akademik yang valid');
+            }
+
             $tagihanItems = $data['tagihan_items'] ?? [];
 
             if (empty($tagihanItems)) {
@@ -174,18 +182,20 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
             }
 
             $totalCreated = 0;
+            $totalSkipped = 0;
+            $skippedDetails = [];
 
             foreach ($siswaList as $siswa) {
                 foreach ($tagihanItems as $item) {
-                    // Check if tagihan already exists to prevent duplicates
-                    $exists = Tagihan::where([
+                    // Check if tagihan already exists for this specific combination
+                    $existingTagihan = Tagihan::where([
                         'siswa_id' => $siswa->id,
                         'jenis_pembayaran_id' => $item['jenis_pembayaran_id'],
                         'tahun_akademik_id' => $tahunAkademikId,
                         'bulan' => $item['bulan'] ?? null,
-                    ])->exists();
+                    ])->first();
 
-                    if (!$exists) {
+                    if (!$existingTagihan) {
                         Tagihan::create([
                             'siswa_id' => $siswa->id,
                             'tahun_akademik_id' => $tahunAkademikId,
@@ -196,6 +206,11 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
                             'tanggal_jatuh_tempo' => $item['tanggal_jatuh_tempo'],
                         ]);
                         $totalCreated++;
+                    } else {
+                        $totalSkipped++;
+                        $jenisPembayaran = JenisPembayaran::find($item['jenis_pembayaran_id']);
+                        $skippedDetails[] = "{$siswa->nama} - {$jenisPembayaran->nama_pembayaran}" .
+                                          ($item['bulan'] ? " ({$item['bulan']})" : '');
                     }
                 }
             }
@@ -203,9 +218,18 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
             DB::commit();
             $this->form->fill([]);
 
+            $message = "Berhasil membuat {$totalCreated} tagihan untuk " . count($siswaList) . " siswa.";
+
+            if ($totalSkipped > 0) {
+                $message .= "\n\nTagihan yang dilewati ({$totalSkipped}):\n" . implode("\n", array_slice($skippedDetails, 0, 5));
+                if (count($skippedDetails) > 5) {
+                    $message .= "\n... dan " . (count($skippedDetails) - 5) . " lainnya";
+                }
+            }
+
             Notification::make()
-                ->title('Berhasil!')
-                ->body("Berhasil membuat {$totalCreated} tagihan untuk " . count($siswaList) . " siswa dengan " . count($tagihanItems) . " jenis pembayaran.")
+                ->title('Generate Tagihan Selesai')
+                ->body($message)
                 ->success()
                 ->send();
 

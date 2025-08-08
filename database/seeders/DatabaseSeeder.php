@@ -13,18 +13,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory(10)->create();
+        // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'admin',
-            'email' => 'admin@admin.com',
-        ]);
+        // User::factory()->create([
+        //     'name' => 'admin',
+        //     'email' => 'admin@admin.com',
+        // ]);
 
 
         //call BookSeeder
         $this->call(
             [
-                ContactSeeder::class,
+                DummySeeder::class,
             ]
         );
     }

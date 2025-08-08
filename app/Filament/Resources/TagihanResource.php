@@ -180,6 +180,10 @@ class TagihanResource extends Resource
                         'sebagian' => 'warning',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 SelectFilter::make('jenis_pembayaran_id')

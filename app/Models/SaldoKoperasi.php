@@ -21,6 +21,11 @@ class SaldoKoperasi extends Model
         'keterangan',
     ];
 
+    protected $casts = [
+        'tanggal' => 'date',
+        'jumlah' => 'decimal:2',
+    ];
+
     // 🔁 Relasi ke tabel users
     public function pelakuTerkait()
     {

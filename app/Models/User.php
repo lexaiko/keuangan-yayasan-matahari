@@ -31,6 +31,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'password',
         'avatar_url',
+        'gaji_bulanan',
+        'is_pegawai',
     ];
 
     /**
@@ -53,6 +55,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'gaji_bulanan' => 'decimal:2',
+            'is_pegawai' => 'boolean',
         ];
     }
 
@@ -61,18 +65,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     //     return asset($this->avatar_url);
     // }
 
-    protected static function booted()
-    {
-        parent::booted();
-
-        // Add a delete listener
-        static::deleted(function ($user) {
-            // Check if the user has an associated SocialiteUser and delete it
-            if ($user->socialiteUser) {
-                $user->socialiteUser->delete();
-            }
-        });
-    }
 
     public function getFilamentAvatarUrl(): ?string
     {
@@ -105,5 +97,21 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function pembayarans()
     {
         return $this->hasMany(Pembayaran::class);
+    }
+
+    public function gajiPegawais()
+    {
+        return $this->hasMany(GajiPegawai::class);
+    }
+
+    public function saldoYayasans()
+    {
+        return $this->hasMany(SaldoYayasan::class);
+    }
+
+    // Scope for employees only
+    public function scopePegawai($query)
+    {
+        return $query->where('is_pegawai', true);
     }
 }

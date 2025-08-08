@@ -187,6 +187,42 @@ class KelasResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('ubahTahunAkademik')
+                        ->label('Ubah Tahun Akademik Masal')
+                        ->icon('heroicon-o-calendar')
+                        ->color('warning')
+                        ->form([
+                            Forms\Components\Select::make('tahun_id')
+                                ->label('Tahun Akademik Baru')
+                                ->options(\App\Models\TahunAkademik::pluck('nama', 'id'))
+                                ->required()
+                                ->searchable()
+                                ->preload()
+                                ->helperText('Pilih tahun akademik yang akan diterapkan ke semua kelas terpilih'),
+                        ])
+                        ->action(function (\Illuminate\Support\Collection $records, array $data) {
+                            $tahunAkademik = \App\Models\TahunAkademik::find($data['tahun_id']);
+                            $updatedCount = 0;
+
+                            foreach ($records as $record) {
+                                $record->update([
+                                    'tahun_id' => $data['tahun_id'],
+                                ]);
+                                $updatedCount++;
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Berhasil!')
+                                ->body("Berhasil mengubah tahun akademik {$updatedCount} kelas ke {$tahunAkademik->nama}")
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->requiresConfirmation()
+                        ->modalHeading('Ubah Tahun Akademik Masal')
+                        ->modalDescription('Apakah Anda yakin ingin mengubah tahun akademik untuk semua kelas yang dipilih? Ini akan mempengaruhi semua siswa di kelas tersebut.')
+                        ->modalSubmitActionLabel('Ya, Ubah')
+                        ->modalCancelActionLabel('Batal'),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
