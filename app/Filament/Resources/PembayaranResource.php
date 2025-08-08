@@ -25,8 +25,11 @@ class PembayaranResource extends Resource
                     ->schema([
                         // Pilih siswa
                         Forms\Components\Select::make('siswa_id')
-                            ->relationship('siswa', 'nama')
-                            ->searchable()
+                            ->relationship('siswa', 'nama', function ($query) {
+                                return $query->select('id', 'nama', 'nis');
+                            })
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->nama} - {$record->nis}")
+                            ->searchable(['nama', 'nis'])
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(fn ($set) => $set('tagihan_ids', []))
@@ -41,13 +44,13 @@ class PembayaranResource extends Resource
                         Forms\Components\Hidden::make('tagihan_ids')
                             ->default([]),
 
-                        // Tombol pilih tagihan dengan perbaikan search
+                        // Tombol pilih tagihan dengan tabel selection
                         Forms\Components\Actions::make([
                             Forms\Components\Actions\Action::make('pilihTagihan')
                                 ->label('+ Add Tagihan')
                                 ->button()
                                 ->modalHeading('Pilih Tagihan Siswa')
-                                ->modalSubmitActionLabel('Pilih')
+                                ->modalSubmitActionLabel('Tambah Tagihan Terpilih')
                                 ->disabled(function (callable $get) {
                                     $siswaId = $get('siswa_id');
                                     if (!$siswaId) return true;
@@ -74,51 +77,67 @@ class PembayaranResource extends Resource
                                 })
                                 ->form(function (callable $get) {
                                     $siswaId = $get('siswa_id');
-                                    $selectedIds = $get('tagihan_ids') ?? []; // Ambil ID yang sudah dipilih
+                                    $selectedIds = $get('tagihan_ids') ?? [];
+
+                                    if (!$siswaId) {
+                                        return [
+                                            Forms\Components\Placeholder::make('warning')
+                                                ->content('Pilih siswa terlebih dahulu')
+                                        ];
+                                    }
+
+                                    $tagihans = Tagihan::where('siswa_id', $siswaId)
+                                        ->where('status', '!=', Tagihan::STATUS_LUNAS)
+                                        ->whereNotIn('id', $selectedIds)
+                                        ->with('jenisPembayaran')
+                                        ->orderBy('tanggal_jatuh_tempo')
+                                        ->get();
+
+                                    if ($tagihans->count() == 0) {
+                                        return [
+                                            Forms\Components\Placeholder::make('no_tagihan')
+                                                ->content(count($selectedIds) > 0 ?
+                                                    'Semua tagihan sudah dipilih (' . count($selectedIds) . ' tagihan)' :
+                                                    'Tidak ada tagihan yang perlu dibayar')
+                                        ];
+                                    }
+
+                                    $options = $tagihans->mapWithKeys(function ($tagihan) {
+                                        $totalDibayar = $tagihan->detailPembayarans()->sum('jumlah_bayar');
+                                        $sisaTagihan = $tagihan->jumlah - $totalDibayar;
+
+                                        $label = $tagihan->jenisPembayaran->nama_pembayaran . ' - ' . ($tagihan->bulan ?? '');
+                                        $label .= ' | Total: Rp ' . number_format($tagihan->jumlah, 0, ',', '.');
+
+                                        if ($totalDibayar > 0) {
+                                            $label .= ' | Sudah dibayar: Rp ' . number_format($totalDibayar, 0, ',', '.');
+                                            $label .= ' | Sisa: Rp ' . number_format($sisaTagihan, 0, ',', '.');
+                                        }
+
+                                        $label .= ' | Status: ' . ucfirst(str_replace('_', ' ', $tagihan->status));
+
+                                        if ($tagihan->tanggal_jatuh_tempo) {
+                                            $label .= ' | Jatuh tempo: ' . \Carbon\Carbon::parse($tagihan->tanggal_jatuh_tempo)->format('d/m/Y');
+                                        }
+
+                                        return [$tagihan->id => $label];
+                                    })->toArray();
 
                                     return [
-                                        Forms\Components\Select::make('selected_tagihan')
-                                            ->label('Tagihan Tersedia')
-                                            ->options(function () use ($siswaId, $selectedIds) {
-                                                if (!$siswaId) return ['debug' => 'Pilih siswa terlebih dahulu'];
-
-                                                $tagihans = Tagihan::where('siswa_id', $siswaId)
-                                                    ->where('status', '!=', Tagihan::STATUS_LUNAS)
-                                                    ->whereNotIn('id', $selectedIds) // Exclude yang sudah dipilih
-                                                    ->with('jenisPembayaran')
-                                                    ->get();
-
-                                                if ($tagihans->count() == 0) {
-                                                    return ['debug' => count($selectedIds) > 0 ? 'Semua tagihan sudah dipilih' : 'Tidak ada tagihan untuk siswa ID: ' . $siswaId];
-                                                }
-
-                                                return $tagihans->mapWithKeys(function ($item) {
-                                                    // Hitung sisa tagihan yang belum dibayar
-                                                    $totalDibayar = $item->detailPembayarans()->sum('jumlah_bayar');
-                                                    $sisaTagihan = $item->jumlah - $totalDibayar;
-
-                                                    $label = ($item->jenisPembayaran->nama_pembayaran ?? 'Unknown') . ' - ' . ($item->bulan ?? '');
-
-                                                    // Tambahkan info sisa jika sudah ada pembayaran
-                                                    if ($totalDibayar > 0) {
-                                                        $label .= ' - Sisa: Rp ' . number_format($sisaTagihan, 0, ',', '.') . ' (Total: Rp ' . number_format($item->jumlah, 0, ',', '.') . ', Sudah dibayar: Rp ' . number_format($totalDibayar, 0, ',', '.') . ')';
-                                                    } else {
-                                                        $label .= ' - Rp ' . number_format($item->jumlah, 0, ',', '.') ;
-                                                    }
-
-                                                    return [$item->id => $label];
-                                                })->toArray();
-                                            })
-                                            ->multiple()
+                                        Forms\Components\CheckboxList::make('selected_tagihan_table')
+                                            ->label('Pilih Tagihan')
+                                            ->options($options)
+                                            ->columns(1)
                                             ->searchable()
+                                            ->bulkToggleable()
                                             ->required()
-                                            ->helperText(count($selectedIds) > 0 ? 'Sudah dipilih: ' . count($selectedIds) . ' tagihan' : null),
+                                            ->helperText('Pilih satu atau lebih tagihan yang akan dibayar'),
                                     ];
                                 })
                                 ->action(function (array $data, callable $get, callable $set) {
                                     $currentIds = $get('tagihan_ids') ?? [];
-                                    $newIds = array_merge($currentIds, $data['selected_tagihan']);
-                                    $uniqueIds = array_unique($newIds);
+                                    $newIds = $data['selected_tagihan_table'] ?? [];
+                                    $uniqueIds = array_unique(array_merge($currentIds, $newIds));
                                     $set('tagihan_ids', $uniqueIds);
 
                                     // Load semua data tagihan yang dipilih (termasuk yang baru)
@@ -142,10 +161,10 @@ class PembayaranResource extends Resource
                                             return [
                                                 'tagihan_id' => $tagihan->id,
                                                 'nama_pembayaran' => $tagihan->jenisPembayaran->nama_pembayaran . ' - ' . ($tagihan->bulan ?? ''),
-                                                'jumlah_tagihan' => $infoText, // ✅ PERBAIKI: Set langsung ke info text, bukan angka
-                                                'jumlah_bayar' => $sisaTagihan, // Set ke sisa yang belum dibayar
-                                                'total_tagihan_asli' => $tagihan->jumlah, // Simpan total asli untuk referensi
-                                                'sudah_dibayar' => $totalDibayar, // Simpan yang sudah dibayar untuk referensi
+                                                'jumlah_tagihan' => $infoText,
+                                                'jumlah_bayar' => $sisaTagihan,
+                                                'total_tagihan_asli' => $tagihan->jumlah,
+                                                'sudah_dibayar' => $totalDibayar,
                                             ];
                                         })->toArray();
 
@@ -155,11 +174,11 @@ class PembayaranResource extends Resource
                                             return floatval($item['jumlah_bayar'] ?? 0);
                                         });
                                         $set('total_bayar', $total);
-                                        $set('tunai', $total); // Set tunai sama dengan total
-                                        $set('kembalian', 0); // Kembalian 0
+                                        $set('tunai', $total);
+                                        $set('kembalian', 0);
                                     }
                                 })
-                                ->modalWidth('4xl'),
+                                ->modalWidth('6xl'),
                         ]),
 
                         // Daftar tagihan yang dipilih
@@ -444,7 +463,7 @@ class PembayaranResource extends Resource
                         }),
                 ]),
             ])
-            ->defaultSort('tanggal_bayar', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array

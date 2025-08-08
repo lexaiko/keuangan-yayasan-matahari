@@ -34,68 +34,105 @@ class TagihanResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-        Select::make('siswa_id')
-    ->relationship('siswa', 'nama')
-    ->searchable()
-    ->required()
-    ->reactive()
-    ->afterStateUpdated(function ($state, callable $set) {
-        $siswa = \App\Models\Siswa::with('kelas.tahun')->find($state);
+            Forms\Components\Section::make('Informasi Siswa')
+                ->schema([
+                    Select::make('siswa_id')
+                        ->relationship('siswa', 'nama', function ($query) {
+                            return $query->select('id', 'nama', 'nis');
+                        })
+                        ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->nama} - {$record->nis}")
+                        ->searchable(['nama', 'nis'])
+                        ->required()
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $siswa = \App\Models\Siswa::with('kelas.tahun')->find($state);
 
-        if ($siswa && $siswa->kelas && $siswa->kelas->tahun) {
-            $set('tahun_akademik_id', $siswa->kelas->tahun->id);
-        }
-    }),
+                            if ($siswa && $siswa->kelas && $siswa->kelas->tahun) {
+                                $set('tahun_akademik_id', $siswa->kelas->tahun->id);
+                            }
+                        })
+                        ->live(),
 
+                    Hidden::make('tahun_akademik_id')
+                        ->required(),
+                ])
+                ->columns(1),
 
-        Select::make('jenis_pembayaran_id')
-            ->relationship('jenisPembayaran', 'nama_pembayaran')
-            ->required()
-            ->reactive()
-            ->afterStateUpdated(function ($state, callable $set, callable $get) {
-                $jenis = JenisPembayaran::find($state);
+            Forms\Components\Section::make('Daftar Tagihan')
+                ->schema([
+                    Forms\Components\Repeater::make('tagihan_items')
+                        ->label('Tagihan')
+                        ->schema([
+                            Select::make('jenis_pembayaran_id')
+                                ->relationship('jenisPembayaran', 'nama_pembayaran')
+                                ->required()
+                                ->reactive()
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    $jenis = JenisPembayaran::find($state);
 
-                // Set jumlah otomatis dari nominal
-                $set('jumlah', $jenis?->nominal ?? 0);
+                                    // Set jumlah otomatis dari nominal
+                                    $set('jumlah', $jenis?->nominal ?? 0);
 
-                // Optional: reset 'bulan' kalau tipe pembayaran bukan bulanan
-                if ($jenis?->tipe_pembayaran === 'sekali') {
-                    $set('bulan', null);
-                }
-            }),
+                                    // Optional: reset 'bulan' kalau tipe pembayaran bukan bulanan
+                                    if ($jenis?->tipe_pembayaran === 'sekali') {
+                                        $set('bulan', null);
+                                    }
+                                }),
 
-        Hidden::make('tahun_akademik_id')
-    ->required(),
+                            Select::make('bulan')
+                                ->options([
+                                    'Januari' => 'Januari',
+                                    'Februari' => 'Februari',
+                                    'Maret' => 'Maret',
+                                    'April' => 'April',
+                                    'Mei' => 'Mei',
+                                    'Juni' => 'Juni',
+                                    'Juli' => 'Juli',
+                                    'Agustus' => 'Agustus',
+                                    'September' => 'September',
+                                    'Oktober' => 'Oktober',
+                                    'November' => 'November',
+                                    'Desember' => 'Desember',
+                                ])
+                                ->native(false)
+                                ->visible(function (callable $get) {
+                                    $jenis = JenisPembayaran::find($get('jenis_pembayaran_id'));
+                                    return $jenis?->tipe === 'bulanan';
+                                }),
 
-        Select::make('bulan')
-            ->required()
-            ->options([
-                'Januari' => 'Januari',
-                'Februari' => 'Februari',
-                'Maret' => 'Maret',
-                'April' => 'April',
-                'Mei' => 'Mei',
-                'Juni' => 'Juni',
-                'Juli' => 'Juli',
-                'Agustus' => 'Agustus',
-                'September' => 'September',
-                'Oktober' => 'Oktober',
-                'November' => 'November',
-                'Desember' => 'Desember',
-            ])
-            ->native(false)
-            ->visible(function (callable $get) {
-                $jenis = JenisPembayaran::find($get('jenis_pembayaran_id'));
-                return $jenis?->tipe === 'bulanan';
-            }),
+                            TextInput::make('jumlah')
+                                ->numeric()
+                                ->required()
+                                ->prefix('Rp'),
 
-        TextInput::make('jumlah')
-            ->numeric()
-            ->required(),
+                            DatePicker::make('tanggal_jatuh_tempo')
+                                ->nullable(),
+                        ])
+                        ->columns(2)
+                        ->defaultItems(1)
+                        ->addActionLabel('+ Tambah Tagihan')
+                        ->itemLabel(function (array $state): ?string {
+                            if (!empty($state['jenis_pembayaran_id'])) {
+                                $jenis = JenisPembayaran::find($state['jenis_pembayaran_id']);
+                                $label = $jenis?->nama_pembayaran ?? 'Tagihan';
 
-        DatePicker::make('tanggal_jatuh_tempo')
-            ->nullable(),
-    ]);
+                                if (!empty($state['bulan'])) {
+                                    $label .= ' - ' . $state['bulan'];
+                                }
+
+                                if (!empty($state['jumlah'])) {
+                                    $label .= ' (Rp ' . number_format($state['jumlah'], 0, ',', '.') . ')';
+                                }
+
+                                return $label;
+                            }
+                            return 'Tagihan Baru';
+                        })
+                        ->collapsible()
+                        ->cloneable(),
+                ])
+                ->visible(fn (callable $get) => !empty($get('siswa_id'))),
+        ]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -126,7 +163,8 @@ class TagihanResource extends Resource
                 TextColumn::make('siswa.nama')->label('Siswa')->searchable(),
                 Tables\Columns\TextColumn::make('jenisPembayaran.nama_pembayaran')->label('Jenis'),
                 Tables\Columns\TextColumn::make('tahunAkademik.nama')->label('Tahun'),
-                Tables\Columns\TextColumn::make('bulan'),
+                Tables\Columns\TextColumn::make('bulan')
+                ->placeholder('Tidak ada bulan'),
                 Tables\Columns\TextColumn::make('jumlah')->money('IDR'),
                 BadgeColumn::make('status')
                     ->label('Status')
@@ -146,7 +184,9 @@ class TagihanResource extends Resource
             ->filters([
                 SelectFilter::make('jenis_pembayaran_id')
                     ->relationship('jenisPembayaran', 'nama_pembayaran')
-                    ->label('Jenis Pembayaran'),
+                    ->label('Jenis Pembayaran')
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('siswa_id')
                     ->relationship('siswa', 'nama')
                     ->label('Siswa')
@@ -154,6 +194,7 @@ class TagihanResource extends Resource
                 SelectFilter::make('status')
                     ->options([
                         'belum_bayar' => 'Belum Bayar',
+                        'sebagian' => 'Sebagian',
                         'lunas' => 'Lunas',
                     ])
                     ->label('Status'),
@@ -166,7 +207,8 @@ class TagihanResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array

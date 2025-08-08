@@ -29,7 +29,7 @@ class JenisPembayaranResource extends Resource
     {
         return $form->schema([
             TextInput::make('nama_pembayaran')->required(),
-            TextInput::make('harga')
+            TextInput::make('nominal')
     ->numeric()
     ->prefix('Rp ')
     ->inputMode('decimal'),

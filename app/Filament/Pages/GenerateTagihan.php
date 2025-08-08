@@ -26,10 +26,10 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
 
     public array $data = [];
 
-protected function getFormStatePath(): string
-{
-    return 'data';
-}
+    protected function getFormStatePath(): string
+    {
+        return 'data';
+    }
 
 
 
@@ -41,111 +41,184 @@ protected function getFormStatePath(): string
     protected function getFormSchema(): array
     {
         return [
-            Forms\Components\Select::make('kelas')
-                ->label('Kelas')
-                ->options(Kelas::all()->pluck('nama', 'id'))
-                ->required(),
-                Select::make('jenis_pembayaran_id')
-    ->label('Jenis Pembayaran')
-    ->options(JenisPembayaran::all()->pluck('nama_pembayaran', 'id'))
-    ->required()
-    ->reactive()
-    ->afterStateUpdated(function ($state, callable $set, callable $get) {
-        $jenis = JenisPembayaran::find($state);
+            Forms\Components\Section::make('Informasi Kelas')
+                ->schema([
+                    Forms\Components\Select::make('kelas')
+                        ->label('Kelas')
+                        ->options(Kelas::all()->pluck('nama', 'id'))
+                        ->required()
+                        ->live()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            // Reset repeater when class changes
+                            $set('tagihan_items', []);
+                        }),
+                ])
+                ->columns(1),
 
-        $set('jumlah', $jenis?->nominal ?? 0);
+            Forms\Components\Section::make('Daftar Tagihan')
+                ->schema([
+                    Forms\Components\Repeater::make('tagihan_items')
+                        ->label('Tagihan yang akan digenerate')
+                        ->schema([
+                            Select::make('jenis_pembayaran_id')
+                                ->label('Jenis Pembayaran')
+                                ->options(JenisPembayaran::all()->pluck('nama_pembayaran', 'id'))
+                                ->required()
+                                ->reactive()
+                                ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                    $jenis = JenisPembayaran::find($state);
 
-        if ($jenis?->tipe === 'sekali') {
-            $set('bulan', null);
-        }
-    }),
+                                    $set('jumlah', $jenis?->nominal ?? 0);
 
-            Select::make('bulan')
-            ->required()
-            ->options([
-                'Januari' => 'Januari',
-                'Februari' => 'Februari',
-                'Maret' => 'Maret',
-                'April' => 'April',
-                'Mei' => 'Mei',
-                'Juni' => 'Juni',
-                'Juli' => 'Juli',
-                'Agustus' => 'Agustus',
-                'September' => 'September',
-                'Oktober' => 'Oktober',
-                'November' => 'November',
-                'Desember' => 'Desember',
-            ])
-            ->native(false)
-            ->visible(function (callable $get) {
-                $jenis = JenisPembayaran::find($get('jenis_pembayaran_id'));
-                return $jenis?->tipe === 'bulanan';
-            }),
-            DatePicker::make('tanggal_jatuh_tempo')
-                ->label('Tanggal Jatuh Tempo')
-                ->date()
+                                    if ($jenis?->tipe === 'sekali') {
+                                        $set('bulan', null);
+                                    }
+                                }),
+
+                            Select::make('bulan')
+                                ->options([
+                                    'Januari' => 'Januari',
+                                    'Februari' => 'Februari',
+                                    'Maret' => 'Maret',
+                                    'April' => 'April',
+                                    'Mei' => 'Mei',
+                                    'Juni' => 'Juni',
+                                    'Juli' => 'Juli',
+                                    'Agustus' => 'Agustus',
+                                    'September' => 'September',
+                                    'Oktober' => 'Oktober',
+                                    'November' => 'November',
+                                    'Desember' => 'Desember',
+                                ])
+                                ->native(false)
+                                ->visible(function (callable $get) {
+                                    $jenis = JenisPembayaran::find($get('jenis_pembayaran_id'));
+                                    return $jenis?->tipe === 'bulanan';
+                                }),
+
+                            Forms\Components\TextInput::make('jumlah')
+                                ->label('Jumlah')
+                                ->numeric()
+                                ->prefix('Rp')
+                                ->required(),
+
+                            DatePicker::make('tanggal_jatuh_tempo')
+                                ->label('Tanggal Jatuh Tempo')
+                                ->required()
+                                ->default(now()->addDays(30)),
+                        ])
+                        ->columns(2)
+                        ->defaultItems(1)
+                        ->addActionLabel('+ Tambah Jenis Tagihan')
+                        ->itemLabel(function (array $state): ?string {
+                            if (!empty($state['jenis_pembayaran_id'])) {
+                                $jenis = JenisPembayaran::find($state['jenis_pembayaran_id']);
+                                $label = $jenis?->nama_pembayaran ?? 'Tagihan';
+
+                                if (!empty($state['bulan'])) {
+                                    $label .= ' - ' . $state['bulan'];
+                                }
+
+                                if (!empty($state['jumlah'])) {
+                                    $label .= ' (Rp ' . number_format($state['jumlah'], 0, ',', '.') . ')';
+                                }
+
+                                return $label;
+                            }
+                            return 'Tagihan Baru';
+                        })
+                        ->collapsible()
+                        ->cloneable()
+                        ->required()
+                        ->minItems(1),
+                ])
+                ->visible(fn (callable $get) => !empty($get('kelas'))),
         ];
     }
 
     protected function getFormActions(): array
     {
         return [
-        Forms\Components\Actions\Action::make('Generate')
-            ->label('Generate Tagihan')
-            ->requiresConfirmation() // ⬅️ ini buat munculin konfirmasi Ya/Tidak
-            ->modalHeading('Yakin ingin generate tagihan?')
-            ->modalDescription('Tagihan akan dibuat untuk semua siswa di kelas yang dipilih.')
-            ->modalButton('Ya, Generate')
-            ->cancelButtonText('Batal')
-            ->submit('generate')
-            ->after(function () {
-                // Ini optional: munculin notifikasi dari Filament UI
-                $this->notify('success', 'Tagihan berhasil digenerate!');
-            })
+            Forms\Components\Actions\Action::make('Generate')
+                ->label('Generate Tagihan')
+                ->requiresConfirmation()
+                ->modalHeading('Yakin ingin generate tagihan?')
+                ->modalDescription(function (callable $get) {
+                    $kelas = Kelas::find($get('kelas'));
+                    $siswaCount = $kelas ? Siswa::where('kelas_id', $kelas->id)->count() : 0;
+                    $tagihanCount = count($get('tagihan_items') ?? []);
+                    $totalTagihan = $siswaCount * $tagihanCount;
+
+                    return "Akan dibuat {$totalTagihan} tagihan ({$tagihanCount} jenis tagihan × {$siswaCount} siswa) untuk kelas {$kelas?->nama}.";
+                })
+                ->modalButton('Ya, Generate')
+                ->cancelButtonText('Batal')
+                ->submit('generate')
+                ->color('primary'),
         ];
     }
 
-   public function generate()
-{
-    $data = $this->form->getState();
+    public function generate()
+    {
+        $data = $this->form->getState();
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        $siswaList = Siswa::where('kelas_id', $data['kelas'])->get();
-        $tahunAkademikId = Kelas::findOrFail($data['kelas'])->tahun?->id;
-        $jenisPembayaran = JenisPembayaran::findOrFail($data['jenis_pembayaran_id']);
-        $tanggalJatuhTempo = $data['tanggal_jatuh_tempo'] ?? now()->addDays(30);
+            $siswaList = Siswa::where('kelas_id', $data['kelas'])->get();
+            $tahunAkademikId = Kelas::findOrFail($data['kelas'])->tahun?->id;
+            $tagihanItems = $data['tagihan_items'] ?? [];
 
-        foreach ($siswaList as $siswa) {
-            Tagihan::create([
-                'siswa_id' => $siswa->id,
-                'tahun_akademik_id' => $tahunAkademikId,
-                'jenis_pembayaran_id' => $jenisPembayaran->id,
-                'jumlah' => $jenisPembayaran->nominal,
-                'status' => 'belum_bayar',
-                'tanggal_jatuh_tempo' => $tanggalJatuhTempo,
-            ]);
+            if (empty($tagihanItems)) {
+                throw new \Exception('Minimal harus ada 1 jenis tagihan');
+            }
+
+            $totalCreated = 0;
+
+            foreach ($siswaList as $siswa) {
+                foreach ($tagihanItems as $item) {
+                    // Check if tagihan already exists to prevent duplicates
+                    $exists = Tagihan::where([
+                        'siswa_id' => $siswa->id,
+                        'jenis_pembayaran_id' => $item['jenis_pembayaran_id'],
+                        'tahun_akademik_id' => $tahunAkademikId,
+                        'bulan' => $item['bulan'] ?? null,
+                    ])->exists();
+
+                    if (!$exists) {
+                        Tagihan::create([
+                            'siswa_id' => $siswa->id,
+                            'tahun_akademik_id' => $tahunAkademikId,
+                            'jenis_pembayaran_id' => $item['jenis_pembayaran_id'],
+                            'bulan' => $item['bulan'] ?? null,
+                            'jumlah' => $item['jumlah'],
+                            'status' => Tagihan::STATUS_BELUM_BAYAR,
+                            'tanggal_jatuh_tempo' => $item['tanggal_jatuh_tempo'],
+                        ]);
+                        $totalCreated++;
+                    }
+                }
+            }
+
+            DB::commit();
+            $this->form->fill([]);
+
+            Notification::make()
+                ->title('Berhasil!')
+                ->body("Berhasil membuat {$totalCreated} tagihan untuk " . count($siswaList) . " siswa dengan " . count($tagihanItems) . " jenis pembayaran.")
+                ->success()
+                ->send();
+
+            return redirect()->to('/admin/tagihans');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Notification::make()
+                ->title('Gagal!')
+                ->body('Terjadi kesalahan saat generate tagihan: ' . $e->getMessage())
+                ->danger()
+                ->send();
         }
-
-        DB::commit();
-        $this->form->fill([]);
-
-        Notification::make()
-            ->title('Berhasil!')
-            ->body('Tagihan berhasil digenerate untuk semua siswa.')
-            ->success()
-            ->send();
-        return redirect()->to('/admin/tagihans');
-
-    } catch (\Throwable $e) {
-        DB::rollBack();
-
-        Notification::make()
-            ->title('Gagal!')
-            ->body('Terjadi kesalahan saat generate tagihan: ' . $e->getMessage())
-            ->danger()
-            ->send();
     }
-}
 }
