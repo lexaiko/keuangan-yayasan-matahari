@@ -11,6 +11,8 @@ use Filament\Tables\Table;
 use Illuminate\Support\Carbon;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
+use App\Exports\SiswaExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Filament\Infolists\Components\Grid;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\BadgeColumn;
@@ -148,36 +150,129 @@ class SiswaResource extends Resource
                 DeleteAction::make(),
             ])
             ->bulkActions([
-    BulkAction::make('ubahStatus')
-        ->label('Ubah Status')
-        ->form([
-            Select::make('status')
-                ->label('Status')
-                ->options([
-                    '1' => 'Aktif',
-                    '2' => 'Baru',
-                    '3' => 'Pindahan',
-                    '4' => 'keluar',
-                    '5' => 'Lulus',
-                ])
-                ->default('1')
-                ->required()
-                ->searchable()
-                ->preload(),
-        ])
-        ->action(function (Collection $records, array $data) {
-    foreach ($records as $record) {
-        $record->update([
-            'status' => $data['status'],
-        ]);
-    }
-        })
-        ->deselectRecordsAfterCompletion()
-        ->requiresConfirmation()
-        ->icon('heroicon-m-arrow-path-rounded-square') // opsional
-        ->color('warning'), // opsional
-            DeleteBulkAction::make()
-])
+                BulkAction::make('ubahStatus')
+                    ->label('Ubah Status')
+                    ->form([
+                        Select::make('status')
+                            ->label('Status')
+                            ->options([
+                                '1' => 'Aktif',
+                                '2' => 'Baru',
+                                '3' => 'Pindahan',
+                                '4' => 'keluar',
+                                '5' => 'Lulus',
+                            ])
+                            ->default('1')
+                            ->required()
+                            ->searchable()
+                            ->preload(),
+                    ])
+                    ->action(function (Collection $records, array $data) {
+                foreach ($records as $record) {
+                    $record->update([
+                        'status' => $data['status'],
+                    ]);
+                }
+                    })
+                    ->deselectRecordsAfterCompletion()
+                    ->requiresConfirmation()
+                    ->icon('heroicon-m-arrow-path-rounded-square') // opsional
+                    ->color('warning'), // opsional
+                BulkAction::make('exportSelected')
+                    ->label('Export Selected to Excel')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function (Collection $records) {
+                        $siswaIds = $records->pluck('id')->toArray();
+                        $siswas = Siswa::with(['kelas.tingkat', 'kelas.tahun'])
+                            ->whereIn('id', $siswaIds)
+                            ->orderBy('nama')
+                            ->get();
+
+                        return Excel::download(new class($siswas) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithMapping, \Maatwebsite\Excel\Concerns\WithStyles, \Maatwebsite\Excel\Concerns\ShouldAutoSize {
+                            private $siswas;
+
+                            public function __construct($siswas)
+                            {
+                                $this->siswas = $siswas;
+                            }
+
+                            public function collection()
+                            {
+                                return $this->siswas;
+                            }
+
+                            public function headings(): array
+                            {
+                                return [
+                                    'No', 'Nama', 'NIS', 'NISN', 'NIK', 'Tempat Lahir', 'Tanggal Lahir',
+                                    'Jenis Kelamin', 'Alamat', 'Nama Ayah', 'Nama Ibu', 'Telepon', 'Email',
+                                    'Kelas', 'Tingkat', 'Tahun Akademik', 'Status'
+                                ];
+                            }
+
+                            public function map($siswa): array
+                            {
+                                static $no = 1;
+                                $status = match ($siswa->status) {
+                                    '1' => 'Aktif', '2' => 'Baru', '3' => 'Pindahan',
+                                    '4' => 'Keluar', '5' => 'Lulus', default => 'Tidak Diketahui',
+                                };
+                                $jenisKelamin = $siswa->jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan';
+
+                                return [
+                                    $no++, $siswa->nama, $siswa->nis, $siswa->nisn, $siswa->nik,
+                                    $siswa->tempat_lahir, $siswa->tanggal_lahir ? \Carbon\Carbon::parse($siswa->tanggal_lahir)->format('d/m/Y') : '',
+                                    $jenisKelamin, $siswa->alamat, $siswa->nama_ayah, $siswa->nama_ibu,
+                                    $siswa->telepon, $siswa->email, $siswa->kelas->nama ?? '',
+                                    $siswa->kelas->tingkat->nama ?? '', $siswa->kelas->tahun->nama ?? '', $status,
+                                ];
+                            }
+
+                            public function styles(\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet)
+                            {
+                                return [
+                                    1 => ['font' => ['bold' => true, 'size' => 12], 'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['argb' => 'FFE2E2E2']]],
+                                ];
+                            }
+                        }, 'data-siswa-selected-' . now()->format('Y-m-d') . '.xlsx');
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                DeleteBulkAction::make()
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('exportAll')
+                    ->label('Export All to Excel')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function () {
+                        return Excel::download(new SiswaExport(), 'data-siswa-semua-' . now()->format('Y-m-d') . '.xlsx');
+                    }),
+                Tables\Actions\Action::make('exportFiltered')
+                    ->label('Export with Filters')
+                    ->icon('heroicon-o-funnel')
+                    ->color('info')
+                    ->form([
+                        Select::make('kelas_id')
+                            ->label('Filter by Kelas')
+                            ->relationship('kelas', 'nama')
+                            ->searchable()
+                            ->preload(),
+                        Select::make('status')
+                            ->label('Filter by Status')
+                            ->options([
+                                '1' => 'Aktif',
+                                '2' => 'Baru',
+                                '3' => 'Pindahan',
+                                '4' => 'Keluar',
+                                '5' => 'Lulus',
+                            ]),
+                    ])
+                    ->action(function (array $data) {
+                        $filters = array_filter($data);
+                        return Excel::download(new SiswaExport($filters), 'data-siswa-filtered-' . now()->format('Y-m-d') . '.xlsx');
+                    }),
+            ])
             ->recordUrl(fn(Siswa $record): string => static::getUrl('show', ['record' => $record]));
     }
 

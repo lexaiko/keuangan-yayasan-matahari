@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('siswas', function (Blueprint $table) {
             $table->uuid('id')->primary(); // id (primary key)
             $table->string('nama');
-            $table->uuid('kelas_id');
-            $table->foreign('kelas_id')
-                ->references('id')
-                ->on('kelas')
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->uuid('kelas_id')->nullable();
+           $table->foreign('kelas_id')
+    ->references('id')
+    ->on('kelas')
+    ->onUpdate('cascade')
+    ->onDelete('set null');
             $table->string('nis')->unique()->nullable();
             $table->string('nisn')->unique()->nullable();
             $table->string('nik')->nullable();

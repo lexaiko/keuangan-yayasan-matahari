@@ -175,7 +175,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>SMK NEGERI 1 KAIDO</h1>
+        <h1>YAYASAN MATAHARI</h1>
         <h2>INVOICE PEMBAYARAN</h2>
         <p>Jl. Pendidikan No. 123, Kaido | Telp: (0271) 123456</p>
     </div>

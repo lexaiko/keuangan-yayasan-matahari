@@ -390,6 +390,12 @@ class PembayaranResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('print')
+                    ->label('Print Invoice')
+                    ->icon('heroicon-o-printer')
+                    ->color('info')
+                    ->url(fn ($record) => route('pembayaran.print', $record->id))
+                    ->openUrlInNewTab(),
                 Tables\Actions\DeleteAction::make()
                     ->before(function ($record) {
                         // ✅ PERBAIKI: Collect affected tagihan IDs BEFORE delete
