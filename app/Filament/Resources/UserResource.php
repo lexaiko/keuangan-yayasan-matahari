@@ -2,26 +2,28 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\User;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
+use App\Models\User;
 use Filament\Tables;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
-use App\Filament\Resources\UserResource\Pages;
 use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\Section as InfolistSection;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Forms\Components\TextInput;
+use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Filters\TernaryFilter;
 use App\Filament\Exports\UserExporter;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\TextInput;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Actions\ExportBulkAction;
+use App\Filament\Resources\UserResource\Pages;
+use Filament\Infolists\Components\Section as InfolistSection;
 
 class UserResource extends Resource
 {
@@ -82,6 +84,10 @@ class UserResource extends Resource
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
+Tables\Columns\TextColumn::make('roles.name')
+                            ->searchable()
+                            ->icon('heroicon-o-shield-check')
+                            ->grow(false),
 
                 ToggleColumn::make('is_pegawai')
                     ->label('Pegawai'),
@@ -103,6 +109,18 @@ class UserResource extends Resource
             ])
             ->actions([
                 EditAction::make(),
+                Action::make('Set Role')
+                    ->icon('heroicon-m-adjustments-vertical')
+                    ->form([
+                        Select::make('role')
+                            ->relationship('roles', 'name')
+                            ->multiple()
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->optionsLimit(10)
+                            ->getOptionLabelFromRecordUsing(fn($record) => $record->name),
+                    ]),
                 DeleteAction::make(),
             ])
             ->bulkActions([
