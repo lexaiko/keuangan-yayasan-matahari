@@ -164,6 +164,7 @@ class PembayaranResource extends Resource
 
                         // Daftar tagihan yang dipilih
                         Forms\Components\Repeater::make('detail_pembayarans')
+                            ->label('Daftar Pembayaran')
                             ->schema([
                                 Forms\Components\Hidden::make('tagihan_id')
                                     ->live() // ✅ TAMBAHKAN live()

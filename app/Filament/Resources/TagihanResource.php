@@ -8,6 +8,7 @@ use App\Models\Tagihan;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\JenisPembayaran;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Hidden;
@@ -18,6 +19,7 @@ use Filament\Tables\Columns\BadgeColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Infolists\Components\TextEntry;
 use App\Filament\Resources\TagihanResource\Pages;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\TagihanResource\RelationManagers;
@@ -91,41 +93,56 @@ class TagihanResource extends Resource
             ->numeric()
             ->required(),
 
-        Radio::make('status')
-            ->options([
-                'belum_bayar' => 'Belum Bayar',
-                'lunas' => 'Lunas',
-            ])
-            ->inline()
-            ->required(),
-
         DatePicker::make('tanggal_jatuh_tempo')
             ->nullable(),
     ]);
     }
 
+    public static function infolist(Infolist $infolist): Infolist
+{
+    return $infolist->schema([
+        TextEntry::make('siswa.nis')->label('NIS Siswa'),
+        TextEntry::make('siswa.nama')->label('Nama Siswa'),
+        TextEntry::make('jenisPembayaran.nama_pembayaran')->label('Jenis Pembayaran'),
+        TextEntry::make('tahunAkademik.nama')->label('Tahun Akademik'),
+        TextEntry::make('bulan')->label('Bulan')->hidden(fn ($record) => $record->bulan === null),
+        TextEntry::make('jumlah')->label('Jumlah')->money('IDR'),
+        TextEntry::make('status')
+    ->badge()
+    ->color(fn (string $state): string => match ($state) {
+        'sebagian' => 'warning',
+        'lunas' => 'success',
+        'belum_bayar' => 'danger',
+    }),
+    ]);
+}
+
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('siswa.nis')->label('NIS Siswa')->searchable(),
-            TextColumn::make('siswa.nama')->label('Siswa')->searchable(),
-            Tables\Columns\TextColumn::make('jenisPembayaran.nama_pembayaran')->label('Jenis'),
-            Tables\Columns\TextColumn::make('tahunAkademik.nama')->label('Tahun'),
-            Tables\Columns\TextColumn::make('bulan'),
-            Tables\Columns\TextColumn::make('jumlah')->money('IDR'),
-            BadgeColumn::make('status')
-    ->label('Status')
-    ->formatStateUsing(fn (string $state): string => match ($state) {
-        'lunas' => 'Lunas',
-        'belum' => 'Belum Bayar',
-        default => ucfirst($state),
-    })
-    ->color(fn (string $state): string => match ($state) {
-        'lunas' => 'success',
-        'belum' => 'danger',
-        default => 'gray',
-    }),
-        ])
+        return $table
+            ->recordUrl(fn ($record): string => TagihanResource::getUrl('view', ['record' => $record]))
+            ->columns([
+                TextColumn::make('siswa.nis')->label('NIS Siswa')->searchable(),
+                TextColumn::make('siswa.nama')->label('Siswa')->searchable(),
+                Tables\Columns\TextColumn::make('jenisPembayaran.nama_pembayaran')->label('Jenis'),
+                Tables\Columns\TextColumn::make('tahunAkademik.nama')->label('Tahun'),
+                Tables\Columns\TextColumn::make('bulan'),
+                Tables\Columns\TextColumn::make('jumlah')->money('IDR'),
+                BadgeColumn::make('status')
+                    ->label('Status')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'lunas' => 'Lunas',
+                        'belum_bayar' => 'Belum Bayar',
+                        'sebagian' => 'Sebagian',
+                        default => ucfirst($state),
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'lunas' => 'success',
+                        'belum_bayar' => 'danger',
+                        'sebagian' => 'warning',
+                        default => 'gray',
+                    }),
+            ])
             ->filters([
                 SelectFilter::make('jenis_pembayaran_id')
                     ->relationship('jenisPembayaran', 'nama_pembayaran')
@@ -143,8 +160,7 @@ class TagihanResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-   Tables\Actions\DeleteAction::make(),
-
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -166,6 +182,7 @@ class TagihanResource extends Resource
             'index' => Pages\ListTagihans::route('/'),
             'create' => Pages\CreateTagihan::route('/create'),
             'edit' => Pages\EditTagihan::route('/{record}/edit'),
+            'view' => Pages\ViewTagihan::route('/{record}'),
         ];
     }
 }

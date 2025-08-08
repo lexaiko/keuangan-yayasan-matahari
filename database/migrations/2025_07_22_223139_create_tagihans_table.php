@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignUuid('tahun_akademik_id')->constrained('tahun_akademiks')->onDelete('cascade');
             $table->string('bulan')->nullable();
             $table->bigInteger('jumlah');
-            $table->enum('status', ['belum_bayar', 'lunas'])->default('belum_bayar');
+            $table->enum('status', ['belum_bayar', 'sebagian', 'lunas'])->default('belum_bayar');
             $table->date('tanggal_jatuh_tempo')->nullable();
             $table->timestamps();
         });
