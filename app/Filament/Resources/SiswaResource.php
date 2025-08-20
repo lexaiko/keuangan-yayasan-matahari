@@ -146,6 +146,132 @@ class SiswaResource extends Resource
                     ->label('Status'),
             ])
             ->actions([
+                Tables\Actions\Action::make('viewTagihan')
+                    ->label('View Tagihan')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->color('info')
+                    ->modalHeading(fn ($record) => 'Tagihan - ' . $record->nama)
+                    ->modalContent(function ($record) {
+                        $tagihans = \App\Models\Tagihan::where('siswa_id', $record->id)
+                            ->where('status', '!=', \App\Models\Tagihan::STATUS_LUNAS)
+                            ->with(['jenisPembayaran', 'detailPembayarans'])
+                            ->orderBy('tanggal_jatuh_tempo')
+                            ->get();
+
+                        if ($tagihans->isEmpty()) {
+                            return new \Illuminate\Support\HtmlString('
+                                <div class="text-center py-8">
+                                    <div class="text-gray-400 text-lg mb-2">✅</div>
+                                    <p class="text-gray-600">Tidak ada tagihan yang belum lunas</p>
+                                </div>
+                            ');
+                        }
+
+                        $html = '<div class="space-y-4">';
+
+                        foreach ($tagihans as $tagihan) {
+                            $totalDibayar = $tagihan->detailPembayarans->sum('jumlah_bayar');
+                            $sisaTagihan = $tagihan->jumlah - $totalDibayar;
+
+                            $statusColor = match($tagihan->status) {
+                                \App\Models\Tagihan::STATUS_BELUM_BAYAR => 'bg-red-100 text-red-800',
+                                \App\Models\Tagihan::STATUS_SEBAGIAN => 'bg-yellow-100 text-yellow-800',
+                                default => 'bg-gray-100 text-gray-800'
+                            };
+
+                            $statusText = match($tagihan->status) {
+                                \App\Models\Tagihan::STATUS_BELUM_BAYAR => 'Belum Bayar',
+                                \App\Models\Tagihan::STATUS_SEBAGIAN => 'Sebagian',
+                                default => ucfirst(str_replace('_', ' ', $tagihan->status))
+                            };
+
+                            $isOverdue = $tagihan->tanggal_jatuh_tempo && \Carbon\Carbon::parse($tagihan->tanggal_jatuh_tempo)->isPast();
+                            $overdueClass = $isOverdue ? 'border-red-300 bg-red-50' : 'border-gray-200';
+
+                            $html .= '
+                                <div class="border rounded-lg p-4 ' . $overdueClass . '">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h4 class="font-semibold text-gray-900">' .
+                                            $tagihan->jenisPembayaran->nama_pembayaran .
+                                            ($tagihan->bulan ? ' - ' . $tagihan->bulan : '') .
+                                        '</h4>
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium ' . $statusColor . '">' .
+                                            $statusText .
+                                        '</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span class="text-gray-600">Total Tagihan:</span>
+                                            <div class="font-semibold">Rp ' . number_format($tagihan->jumlah, 0, ',', '.') . '</div>
+                                        </div>';
+
+                            if ($totalDibayar > 0) {
+                                $html .= '
+                                        <div>
+                                            <span class="text-gray-600">Sudah Dibayar:</span>
+                                            <div class="font-semibold text-green-600">Rp ' . number_format($totalDibayar, 0, ',', '.') . '</div>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-600">Sisa Tagihan:</span>
+                                            <div class="font-semibold text-red-600">Rp ' . number_format($sisaTagihan, 0, ',', '.') . '</div>
+                                        </div>';
+                            }
+
+                            if ($tagihan->tanggal_jatuh_tempo) {
+                                $dueDate = \Carbon\Carbon::parse($tagihan->tanggal_jatuh_tempo);
+                                $dueDateClass = $isOverdue ? 'text-red-600 font-semibold' : 'text-gray-900';
+
+                                $html .= '
+                                        <div>
+                                            <span class="text-gray-600">Jatuh Tempo:</span>
+                                            <div class="' . $dueDateClass . '">' .
+                                                $dueDate->format('d/m/Y') .
+                                                ($isOverdue ? ' (Terlambat)' : '') .
+                                            '</div>
+                                        </div>';
+                            }
+
+                            $html .= '
+                                    </div>';
+
+                            if ($tagihan->keterangan) {
+                                $html .= '
+                                    <div class="mt-2 text-sm text-gray-600">
+                                        <span class="font-medium">Keterangan:</span> ' . $tagihan->keterangan . '
+                                    </div>';
+                            }
+
+                            $html .= '</div>';
+                        }
+
+                        $totalSemua = $tagihans->sum(fn($t) => $t->jumlah - $t->detailPembayarans->sum('jumlah_bayar'));
+
+                        $html .= '
+                            </div>
+                            <div class="mt-6 pt-4 border-t">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-lg font-semibold text-gray-900">Total Semua Tagihan:</span>
+                                    <span class="text-xl font-bold text-red-600">Rp ' . number_format($totalSemua, 0, ',', '.') . '</span>
+                                </div>
+                            </div>';
+
+                        return new \Illuminate\Support\HtmlString($html);
+                    })
+                    ->modalWidth('4xl')
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Tutup')
+                    ->modalFooterActions([
+                        Tables\Actions\Action::make('printTagihan')
+                            ->label('Print PDF')
+                            ->icon('heroicon-o-printer')
+                            ->color('success')
+                            ->url(fn ($record) => route('tagihan.print', ['siswa_id' => $record->id]))
+                            ->openUrlInNewTab()
+                            ->visible(fn ($record) => \App\Models\Tagihan::where('siswa_id', $record->id)
+                                ->where('status', '!=', \App\Models\Tagihan::STATUS_LUNAS)
+                                ->exists())
+                    ]),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

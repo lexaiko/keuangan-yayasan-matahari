@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Models\Tagihan;
 use App\Models\Pembayaran;
+use App\Models\JenisPembayaran;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -36,7 +37,14 @@ class PembayaranResource extends Resource
                             ->searchable(['nama', 'nis'])
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn ($set) => $set('tagihan_ids', []))
+                            ->afterStateUpdated(function ($set, $state) {
+                                // Clear semua data terkait ketika siswa diganti
+                                $set('tagihan_ids', []);
+                                $set('detail_pembayarans', []);
+                                $set('total_bayar', 0);
+                                $set('tunai', 0);
+                                $set('kembalian', 0);
+                            })
                             ->live(),
 
                         // Tanggal bayar
@@ -390,6 +398,44 @@ class PembayaranResource extends Resource
                     ->relationship('siswa', 'nama')
                     ->searchable()
                     ->preload(),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('exportReport')
+                    ->label('Export Laporan')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\Section::make('Filter Laporan')
+                            ->schema([
+                                Forms\Components\DatePicker::make('start_date')
+                                    ->label('Tanggal Mulai')
+                                    ->required()
+                                    ->default(now()->startOfMonth()),
+
+                                Forms\Components\DatePicker::make('end_date')
+                                    ->label('Tanggal Selesai')
+                                    ->required()
+                                    ->default(now()->endOfMonth()),
+
+                                Forms\Components\Select::make('jenis_pembayaran_id')
+                                    ->label('Jenis Pembayaran')
+                                    ->options(JenisPembayaran::all()->pluck('nama_pembayaran', 'id'))
+                                    ->searchable()
+                                    ->placeholder('Semua Jenis Pembayaran')
+                                    ->helperText('Kosongkan untuk menampilkan semua jenis pembayaran'),
+                            ])
+                    ])
+                    ->action(function (array $data) {
+                        $url = route('pembayaran.report.export', [
+                            'start_date' => $data['start_date'],
+                            'end_date' => $data['end_date'],
+                            'jenis_pembayaran_id' => $data['jenis_pembayaran_id'] ?? null,
+                        ]);
+
+                        return redirect($url);
+                    })
+                    ->modalSubmitActionLabel('Export PDF')
+                    ->modalWidth('md'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

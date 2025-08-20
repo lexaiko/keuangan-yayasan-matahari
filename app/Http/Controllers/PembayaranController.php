@@ -18,7 +18,7 @@ class PembayaranController extends Controller
         ])->findOrFail($id);
 
         $pdf = Pdf::loadView('pdf.invoice', compact('pembayaran'))
-            ->setPaper('a4', 'portrait')
+            ->setPaper('a4', 'landscape') // Changed to landscape
             ->setOptions([
                 'defaultFont' => 'sans-serif',
                 'isHtml5ParserEnabled' => true,

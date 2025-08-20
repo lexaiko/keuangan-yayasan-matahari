@@ -9,290 +9,265 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
-            font-size: 12px;
-            line-height: 1.4;
+            padding: 15px;
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
         }
 
         .header {
             text-align: center;
             border-bottom: 2px solid #333;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 18px;
             color: #333;
         }
 
-        .header h2 {
+        .header .address {
+            font-size: 10px;
             margin: 5px 0;
-            font-size: 18px;
             color: #666;
+        }
+
+        .invoice-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-transform: uppercase;
         }
 
         .invoice-info {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
-        .invoice-info div {
+        .left-info, .right-info {
             width: 48%;
         }
 
-        .invoice-number {
-            text-align: right;
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
+        .info-table {
+            width: 100%;
+            font-size: 11px;
         }
 
-        .student-info h3 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #333;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 5px;
+        .info-table td {
+            padding: 2px 5px;
+            vertical-align: top;
         }
 
-        .info-row {
-            margin-bottom: 5px;
-        }
-
-        .info-label {
-            display: inline-block;
+        .info-table .label {
             width: 120px;
             font-weight: bold;
         }
 
-        .table-container {
-            margin: 20px 0;
+        .info-table .colon {
+            width: 10px;
         }
 
-        table {
+        .payment-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin: 15px 0;
+            font-size: 10px;
         }
 
-        table th,
-        table td {
-            border: 1px solid #ddd;
-            padding: 8px;
+        .payment-table th,
+        .payment-table td {
+            border: 1px solid #333;
+            padding: 5px;
             text-align: left;
         }
 
-        table th {
-            background-color: #f8f9fa;
+        .payment-table th {
+            background-color: #f0f0f0;
             font-weight: bold;
+            text-align: center;
+            font-size: 9px;
+        }
+
+        .payment-table .text-center {
             text-align: center;
         }
 
-        .text-right {
+        .payment-table .text-right {
             text-align: right;
         }
 
-        .text-center {
-            text-align: center;
+        .notes-section {
+            margin: 15px 0;
+        }
+
+        .notes-label {
+            font-weight: bold;
+            margin-bottom: 5px;
         }
 
         .total-section {
-            margin-top: 20px;
-            border-top: 2px solid #333;
-            padding-top: 15px;
+            margin-top: 15px;
+            float: right;
+            width: 250px;
         }
 
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
+        .total-table {
+            width: 100%;
+            font-size: 11px;
         }
 
-        .total-row.grand-total {
+        .total-table td {
+            padding: 3px 5px;
+        }
+
+        .total-table .total-label {
+            text-align: right;
+            width: 60%;
+        }
+
+        .total-table .total-amount {
+            text-align: right;
+            width: 40%;
+            border-bottom: 1px solid #333;
+        }
+
+        .grand-total {
             font-weight: bold;
-            font-size: 16px;
-            border-top: 1px solid #333;
-            padding-top: 8px;
+            font-size: 12px;
         }
 
-        .footer {
-            margin-top: 40px;
-            display: flex;
-            justify-content: space-between;
+        .signature-section {
+            clear: both;
+            margin-top: 30px;
+            text-align: right;
+            margin-right: 50px;
         }
 
-        .signature {
+        .signature-box {
+            display: inline-block;
             text-align: center;
             width: 200px;
         }
 
         .signature-line {
             border-bottom: 1px solid #333;
-            margin-top: 60px;
-            margin-bottom: 5px;
+            margin: 40px 0 5px 0;
         }
 
-        .notes {
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-left: 4px solid #007bff;
-        }
-
-        .notes h4 {
-            margin: 0 0 10px 0;
-            color: #333;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .badge-success {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .badge-warning {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-danger {
-            background-color: #f8d7da;
-            color: #721c24;
+        .footer-note {
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>YAYASAN MATAHARI</h1>
-        <h2>INVOICE PEMBAYARAN</h2>
-        <p>Jl. Pendidikan No. 123, Kaido | Telp: (0271) 123456</p>
-    </div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>YAYASAN MATAHARI</h1>
+            <div class="address">Perum Taman Puring Asri Blok G No 10-12 Kel. Sobo Banyuwangi 68418</div>
+            <div class="address">Telp/HP: 082337349209 Email: yayasanmatahari@gmail.com</div>
+        </div>
 
-    <div class="invoice-info">
-        <div class="student-info">
-            <h3>Informasi Siswa</h3>
-            <div class="info-row">
-                <span class="info-label">Nama Siswa:</span>
-                <span>{{ $pembayaran->siswa->nama }}</span>
+        <!-- Invoice Title -->
+        <div class="invoice-title">BUKTI PEMBAYARAN</div>
+
+        <!-- Invoice Info -->
+        <div class="invoice-info">
+            <div class="left-info">
+                <table class="info-table">
+                    <tr>
+                        <td class="label">NO.</td>
+                        <td class="colon">:</td>
+                        <td>{{ str_pad($pembayaran->id, 6, '0', STR_PAD_LEFT) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">TANGGAL</td>
+                        <td class="colon">:</td>
+                        <td>{{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d F Y') }}</td>
+                    </tr>
+                </table>
             </div>
-            <div class="info-row">
-                <span class="info-label">NIS:</span>
-                <span>{{ $pembayaran->siswa->nis }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Kelas:</span>
-                <span>{{ $pembayaran->siswa->kelas->nama ?? '-' }} ({{ $pembayaran->siswa->kelas->tingkat->nama ?? '-' }})</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Tahun Akademik:</span>
-                <span>{{ $pembayaran->siswa->kelas->tahun->nama ?? '-' }}</span>
+            <div class="right-info">
+                <table class="info-table">
+                    <tr>
+                        <td class="label">NAMA</td>
+                        <td class="colon">:</td>
+                        <td>{{ $pembayaran->siswa->nama }} ({{ $pembayaran->siswa->nis }})</td>
+                    </tr>
+                </table>
             </div>
         </div>
 
-        <div class="invoice-number">
-            <h3>Invoice #{{ $pembayaran->id }}</h3>
-            <div class="info-row">
-                <span class="info-label">Tanggal Bayar:</span>
-                <span>{{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d/m/Y') }}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Petugas:</span>
-                <span>{{ $pembayaran->user->name ?? 'Admin' }}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="table-container">
-        <h3>Detail Pembayaran</h3>
-        <table>
+        <!-- Payment Details Table -->
+        <table class="payment-table">
             <thead>
                 <tr>
-                    <th width="5%">No</th>
-                    <th width="25%">Jenis Pembayaran</th>
-                    <th width="15%">Bulan</th>
-                    <th width="20%">Total Tagihan</th>
-                    <th width="20%">Jumlah Bayar</th>
-                    <th width="15%">Status</th>
+                    <th width="5%">#</th>
+                    <th width="45%">URAIAN PEMBAYARAN</th>
+                    <th width="50%">JUMLAH</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($pembayaran->detailPembayarans as $index => $detail)
-                    @php
-                        $totalTagihan = $detail->tagihan->jumlah;
-                        $totalDibayar = $detail->tagihan->detailPembayarans()->sum('jumlah_bayar');
-                        $status = $totalDibayar >= $totalTagihan ? 'Lunas' : ($totalDibayar > 0 ? 'Sebagian' : 'Belum Bayar');
-                        $statusClass = $totalDibayar >= $totalTagihan ? 'badge-success' : ($totalDibayar > 0 ? 'badge-warning' : 'badge-danger');
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $detail->tagihan->jenisPembayaran->nama_pembayaran ?? '-' }}</td>
-                        <td class="text-center">{{ $detail->tagihan->bulan ?? '-' }}</td>
-                        <td class="text-right">Rp {{ number_format($totalTagihan, 0, ',', '.') }}</td>
-                        <td class="text-right">Rp {{ number_format($detail->jumlah_bayar, 0, ',', '.') }}</td>
-                        <td class="text-center">
-                            <span class="badge {{ $statusClass }}">{{ $status }}</span>
-                        </td>
-                    </tr>
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td>{{ $detail->tagihan->jenisPembayaran->nama_pembayaran ?? '-' }}@if($detail->tagihan->bulan) - {{ $detail->tagihan->bulan }}@endif</td>
+                    <td class="text-right">Rp {{ number_format($detail->jumlah_bayar, 0, ',', '.') }}</td>
+                </tr>
                 @endforeach
             </tbody>
         </table>
+
+        <!-- Notes Section -->
+        @if($pembayaran->keterangan)
+        <div class="notes-section">
+            <div class="notes-label">Terbilang:</div>
+            <div>{{ $pembayaran->keterangan }}</div>
+        </div>
+        @endif
+
+        <!-- Total Section -->
+        <div class="total-section">
+            <table class="total-table">
+                <tr>
+                    <td class="total-label">Grand Total :</td>
+                    <td class="total-amount">Rp {{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div>{{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d F Y') }}</div>
+                <div>Petugas Administrasi,</div>
+                <div class="signature-line"></div>
+                <div>{{ auth()->user()->name ?? 'Administrator' }}</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        {{-- <div class="footer-note">
+            <p>Invoice ini dicetak secara otomatis pada {{ now()->format('d/m/Y H:i:s') }}</p>
+            <p>Terima kasih atas pembayaran Anda</p>
+        </div> --}}
     </div>
-
-    <div class="total-section">
-        <div class="total-row">
-            <span>Subtotal:</span>
-            <span>Rp {{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</span>
+</body>
+</html>
+</html>
         </div>
-        <div class="total-row grand-total">
-            <span>Total Bayar:</span>
-            <span>Rp {{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</span>
-        </div>
-        <div class="total-row">
-            <span>Uang Tunai:</span>
-            <span>Rp {{ number_format($pembayaran->tunai, 0, ',', '.') }}</span>
-        </div>
-        <div class="total-row">
-            <span>Kembalian:</span>
-            <span>Rp {{ number_format($pembayaran->kembalian, 0, ',', '.') }}</span>
-        </div>
-    </div>
-
-    @if($pembayaran->keterangan)
-        <div class="notes">
-            <h4>Keterangan:</h4>
-            <p>{{ $pembayaran->keterangan }}</p>
-        </div>
-    @endif
-
-    <div class="footer">
-        <div class="signature">
-            <p>Siswa/Wali Siswa</p>
-            <div class="signature-line"></div>
-            <p>{{ $pembayaran->siswa->nama }}</p>
-        </div>
-
-        <div class="signature">
-            <p>Petugas Keuangan</p>
-            <div class="signature-line"></div>
-            <p>{{ $pembayaran->user->name ?? 'Admin' }}</p>
-        </div>
-    </div>
-
-    <div style="margin-top: 30px; text-align: center; font-size: 10px; color: #666;">
-        <p>Invoice ini dicetak secara otomatis pada {{ now()->format('d/m/Y H:i:s') }}</p>
-        <p>Terima kasih atas pembayaran Anda</p>
     </div>
 </body>
 </html>
