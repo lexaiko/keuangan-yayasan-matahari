@@ -8,8 +8,6 @@ use App\Filament\Widgets\KeuanganChartWidget;
 use App\Filament\Widgets\SaldoKoperasiWidget;
 use App\Filament\Widgets\RingkasanKeuanganWidget;
 use App\Filament\Widgets\TransaksiTerakhirWidget;
-use App\Filament\Resources\AdminResource\Widgets\SaldoTableWidget;
-use App\Filament\Resources\AdminResource\Widgets\SaldoAllTableWidget;
 use App\Filament\Resources\AdminResource\Widgets\FilterSaldoKoperasiWidget;
 
 class KeuanganDashboard extends Page
@@ -25,10 +23,6 @@ class KeuanganDashboard extends Page
     {
         return [
             RingkasanKeuanganWidget::class,
-            SaldoYayasanWidget::class,
-            SaldoAllTableWidget::class,
-            FilterSaldoKoperasiWidget::class,
-            SaldoKoperasiWidget::class,
 
         ];
     }

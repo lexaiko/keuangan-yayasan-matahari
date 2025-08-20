@@ -15,7 +15,7 @@ return new class extends Migration
     $table->uuid('id')->primary();
     $table->foreignUuid('siswa_id')->constrained('siswas')->onDelete('cascade');
     $table->foreignId('tagihan_id')->constrained('tagihan')->onDelete('cascade');
-    $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // admin/operator
+    $table->foreignId('user_id')->constrained('users'); // jangan onDelete
     $table->bigInteger('jumlah_bayar');
     $table->date('tanggal_bayar');
     $table->text('keterangan')->nullable();

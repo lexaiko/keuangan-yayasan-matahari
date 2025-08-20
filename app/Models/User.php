@@ -31,8 +31,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'password',
         'avatar_url',
-        'gaji_bulanan',
-        'is_pegawai',
     ];
 
     /**
@@ -78,17 +76,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             str_ends_with($this->email, '@admin.com'));
     }
 
-    public function pinjaman()
-    {
-    return $this->hasMany(PinjamanUser::class);
-    }
-
-
-    // relasi ke SaldoKoperasi
-    public function saldoKoperasi()
-    {
-        return $this->hasMany(SaldoKoperasi::class, 'pelaku_terkait_id');
-    }
 
     public function logTransaksi()
     {
@@ -97,11 +84,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function pembayarans()
     {
         return $this->hasMany(Pembayaran::class);
-    }
-
-    public function gajiPegawais()
-    {
-        return $this->hasMany(GajiPegawai::class);
     }
 
     public function saldoYayasans()

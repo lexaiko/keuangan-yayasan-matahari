@@ -58,15 +58,6 @@ class UserResource extends Resource
                             ->required(fn (string $context): bool => $context === 'create')
                             ->maxLength(255),
 
-                        Toggle::make('is_pegawai')
-                            ->label('Adalah Pegawai')
-                            ->default(true),
-
-                        TextInput::make('gaji_bulanan')
-                            ->label('Gaji Bulanan')
-                            ->numeric()
-                            ->prefix('Rp')
-                            ->default(0),
                     ])
                     ->columns(2),
             ]);
@@ -89,14 +80,6 @@ Tables\Columns\TextColumn::make('roles.name')
                             ->icon('heroicon-o-shield-check')
                             ->grow(false),
 
-                ToggleColumn::make('is_pegawai')
-                    ->label('Pegawai'),
-
-                TextColumn::make('gaji_bulanan')
-                    ->label('Gaji Bulanan')
-                    ->money('IDR')
-                    ->sortable(),
-
                 TextColumn::make('created_at')
                     ->label('Dibuat')
                     ->dateTime('d/m/Y H:i')
@@ -104,8 +87,6 @@ Tables\Columns\TextColumn::make('roles.name')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                TernaryFilter::make('is_pegawai')
-                    ->label('Pegawai'),
             ])
             ->actions([
                 EditAction::make(),
