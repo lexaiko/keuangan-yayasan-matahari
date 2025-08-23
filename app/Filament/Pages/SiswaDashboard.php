@@ -31,6 +31,7 @@ class SiswaDashboard extends Page
     {
         return [
             DetailSppBelumBayarWidget::class,
+            \App\Filament\Widgets\DetailSppSudahBayarWidget::class,
         ];
     }
 
