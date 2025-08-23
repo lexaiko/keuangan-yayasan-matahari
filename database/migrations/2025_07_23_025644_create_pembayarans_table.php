@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('pembayarans', function (Blueprint $table) {
     $table->uuid('id')->primary();
-    $table->foreignUuid('siswa_id')->constrained('siswas')->onDelete('cascade');
-    $table->foreignId('tagihan_id')->constrained('tagihan')->onDelete('cascade');
+    $table->foreignUuid('siswa_id')->constrained('siswas');
+    $table->foreignId('tagihan_id')->constrained('tagihan');
     $table->foreignId('user_id')->constrained('users'); // jangan onDelete
     $table->bigInteger('jumlah_bayar');
     $table->date('tanggal_bayar');

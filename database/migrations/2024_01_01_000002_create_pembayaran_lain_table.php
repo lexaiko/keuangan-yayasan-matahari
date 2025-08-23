@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('pembayaran_lain', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('jenis_pembayaran_lain_id')->constrained('jenis_pembayaran_lain')->onDelete('cascade');
+            $table->foreignId('jenis_pembayaran_lain_id')->constrained('jenis_pembayaran_lain');
             $table->string('nama_pembayar');
             $table->decimal('jumlah', 15, 2);
             $table->date('tanggal_pembayaran');

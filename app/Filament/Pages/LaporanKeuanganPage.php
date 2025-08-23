@@ -32,7 +32,7 @@ class LaporanKeuanganPage extends Page implements HasForms, HasTable
     protected static ?string $navigationLabel = 'Laporan Keuangan';
     protected static ?string $title = 'Laporan Keuangan';
     protected static ?string $navigationGroup = 'Laporan';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = -1;
 
     public ?array $data = [];
     public $dari_tanggal;

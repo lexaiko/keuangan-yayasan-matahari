@@ -24,6 +24,7 @@ class PembayaranLainResource extends Resource
     protected static ?string $pluralModelLabel = 'Pembayaran Lain-Lain';
 
     protected static ?string $navigationGroup = 'Pembayaran';
+    protected static ?int $navigationSort = -5;
 
     public static function form(Form $form): Form
     {
