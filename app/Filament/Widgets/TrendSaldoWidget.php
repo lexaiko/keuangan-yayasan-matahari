@@ -2,26 +2,24 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\SaldoYayasan;
 use App\Models\Pembayaran;
 use App\Models\PembayaranLain;
 use App\Models\PemasukanPengeluaranYayasan;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Carbon;
 
-class KeuanganChartWidget extends ChartWidget
+class TrendSaldoWidget extends ChartWidget
 {
-    protected static ?string $heading = 'Trend Keuangan Yayasan (6 Bulan Terakhir)';
-
-    protected static ?int $sort = 4;
+    protected static ?string $heading = 'Trend Saldo Yayasan (12 Bulan Terakhir)';
+    protected static ?int $sort = 6;
 
     protected function getData(): array
     {
         $months = [];
-        $pendapatanData = [];
-        $pengeluaranData = [];
+        $saldoData = [];
+        $runningSaldo = 0;
 
-        for ($i = 5; $i >= 0; $i--) {
+        for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $month = $date->month;
             $year = $date->year;
@@ -29,7 +27,7 @@ class KeuanganChartWidget extends ChartWidget
 
             $months[] = $monthName;
 
-            // Pendapatan = Pembayaran Siswa + Pembayaran Lain-lain + Pemasukan Manual
+            // Calculate monthly changes
             $pembayaranSiswa = Pembayaran::whereMonth('tanggal_bayar', $month)
                 ->whereYear('tanggal_bayar', $year)
                 ->sum('jumlah_bayar');
@@ -43,31 +41,26 @@ class KeuanganChartWidget extends ChartWidget
                 ->whereYear('tanggal_transaksi', $year)
                 ->sum('jumlah');
 
-            $totalPendapatan = $pembayaranSiswa + $pembayaranLain + $pemasukanManual;
-
-            // Pengeluaran dari pemasukan pengeluaran yayasan
-            $pengeluaran = PemasukanPengeluaranYayasan::where('jenis_transaksi', 'pengeluaran')
+            $pengeluaranManual = PemasukanPengeluaranYayasan::where('jenis_transaksi', 'pengeluaran')
                 ->whereMonth('tanggal_transaksi', $month)
                 ->whereYear('tanggal_transaksi', $year)
                 ->sum('jumlah');
 
-            $pendapatanData[] = $totalPendapatan;
-            $pengeluaranData[] = $pengeluaran;
+            $monthlyChange = $pembayaranSiswa + $pembayaranLain + $pemasukanManual - $pengeluaranManual;
+            $runningSaldo += $monthlyChange;
+
+            $saldoData[] = $runningSaldo;
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Pendapatan',
-                    'data' => $pendapatanData,
-                    'backgroundColor' => '#10B981',
-                    'borderColor' => '#059669',
-                ],
-                [
-                    'label' => 'Pengeluaran',
-                    'data' => $pengeluaranData,
-                    'backgroundColor' => '#EF4444',
-                    'borderColor' => '#DC2626',
+                    'label' => 'Saldo Yayasan',
+                    'data' => $saldoData,
+                    'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                    'borderColor' => '#3B82F6',
+                    'fill' => true,
+                    'tension' => 0.4,
                 ],
             ],
             'labels' => $months,
@@ -79,4 +72,3 @@ class KeuanganChartWidget extends ChartWidget
         return 'line';
     }
 }
-

@@ -36,11 +36,18 @@ class SaldoYayasan extends Model
 
     public static function getSaldoTerkini()
     {
-        $totalPendapatan = self::where('jenis_transaksi', 'pendapatan')->sum('jumlah');
-        $totalPengeluaran = self::where('jenis_transaksi', 'pengeluaran')->sum('jumlah');
-        
-        // Saldo bisa minus
-        return $totalPendapatan - $totalPengeluaran;
+        // Pemasukan - Pengeluaran dari transaksi manual
+        $pemasukanManual = PemasukanPengeluaranYayasan::where('jenis_transaksi', 'pemasukan')->sum('jumlah');
+        $pengeluaranManual = PemasukanPengeluaranYayasan::where('jenis_transaksi', 'pengeluaran')->sum('jumlah');
+
+        // Pembayaran siswa
+        $pembayaranSiswa = Pembayaran::sum('jumlah_bayar');
+
+        // Pembayaran lain-lain
+        $pembayaranLain = PembayaranLain::sum('jumlah');
+
+        // Formula: (Pemasukan - Pengeluaran) + Pembayaran Siswa + Pembayaran Lain-Lain
+        return ($pemasukanManual - $pengeluaranManual) + $pembayaranSiswa + $pembayaranLain;
     }
 
     public static function addPendapatan($kategori, $jumlah, $keterangan, $referensi = null)

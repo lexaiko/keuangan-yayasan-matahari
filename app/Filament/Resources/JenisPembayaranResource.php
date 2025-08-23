@@ -23,8 +23,8 @@ class JenisPembayaranResource extends Resource
 {
     protected static ?string $model = JenisPembayaran::class;
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
-    protected static ?string $navigationLabel = 'Jenis Pembayaran';
-    protected static ?string $navigationGroup = 'Manajemen Tagihan';
+    protected static ?string $navigationLabel = 'Jenis Tagihan Siswa';
+    protected static ?string $navigationGroup = 'Pembayaran';
     public static function form(Form $form): Form
     {
         return $form->schema([

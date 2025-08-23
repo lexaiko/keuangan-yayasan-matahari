@@ -20,6 +20,7 @@ class GenerateTagihan extends Page implements Forms\Contracts\HasForms
     use Forms\Concerns\InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationLabel = 'Generate Tagihan Siswa';
     protected static ?string $navigationGroup = 'Manajemen Tagihan';
 
     protected static string $view = 'filament.pages.generate-tagihan';

@@ -1,10 +1,10 @@
-{{-- filepath: c:\coding\laravel\kaido\resources\views\pdf\invoice.blade.php --}}
+{{-- filepath: c:\coding\laravel\kaido\resources\views\pdf\invoice-pembayaran-lain.blade.php --}}
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice Pembayaran - {{ $pembayaran->id }}</title>
+    <title>Invoice Pembayaran Lain - {{ $pembayaran->id }}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -194,12 +194,12 @@
                     <tr>
                         <td class="label">NO.</td>
                         <td class="colon">:</td>
-                        <td>{{ str_pad($pembayaran->id, 6, '0', STR_PAD_LEFT) }}</td>
+                        <td>PL-{{ str_pad($pembayaran->id, 6, '0', STR_PAD_LEFT) }}</td>
                     </tr>
                     <tr>
                         <td class="label">TANGGAL</td>
                         <td class="colon">:</td>
-                        <td>{{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($pembayaran->tanggal_pembayaran)->format('d/m/Y') }}</td>
                     </tr>
                 </table>
             </div>
@@ -208,7 +208,12 @@
                     <tr>
                         <td class="label">NAMA</td>
                         <td class="colon">:</td>
-                        <td>{{ $pembayaran->siswa->nama }} ({{ $pembayaran->siswa->nis }})</td>
+                        <td>{{ $pembayaran->nama_pembayar }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Jenis Pembayaran</td>
+                        <td class="colon">:</td>
+                        <td>{{ $pembayaran->jenisPembayaranLain->nama_jenis }}</td>
                     </tr>
                 </table>
             </div>
@@ -224,13 +229,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($pembayaran->detailPembayarans as $index => $detail)
                 <tr>
-                    <td class="text-center">{{ $index + 1 }}</td>
-                    <td>{{ $detail->tagihan->jenisPembayaran->nama_pembayaran ?? '-' }}@if($detail->tagihan->bulan) - {{ $detail->tagihan->bulan }}@endif</td>
-                    <td class="text-right">Rp {{ number_format($detail->jumlah_bayar, 0, ',', '.') }}</td>
+                    <td class="text-center">1</td>
+                    <td>{{ $pembayaran->jenisPembayaranLain->nama_jenis }}</td>
+                    <td class="text-right">Rp {{ number_format($pembayaran->jumlah, 0, ',', '.') }}</td>
                 </tr>
-                @endforeach
             </tbody>
         </table>
 
@@ -247,7 +250,7 @@
             <table class="total-table">
                 <tr class="grand-total">
                     <td class="total-label">Grand Total :</td>
-                    <td class="total-amount">Rp {{ number_format($pembayaran->jumlah_bayar, 0, ',', '.') }}</td>
+                    <td class="total-amount">Rp {{ number_format($pembayaran->jumlah, 0, ',', '.') }}</td>
                 </tr>
             </table>
         </div>
@@ -255,12 +258,18 @@
         <!-- Signature Section -->
         <div class="signature-section">
             <div class="signature-box">
-                <div>{{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d/m/Y') }}</div>
+                <div>{{ \Carbon\Carbon::parse($pembayaran->tanggal_pembayaran)->format('d/m/Y') }}</div>
                 <div>Petugas Administrasi,</div>
                 <div class="signature-line"></div>
                 <div>{{ auth()->user()->name ?? 'Administrator' }}</div>
             </div>
         </div>
+
+        <!-- Footer -->
+        {{-- <div class="footer-note">
+            <p>Invoice ini dicetak secara otomatis pada {{ now()->format('d/m/Y H:i:s') }}</p>
+            <p>Terima kasih atas pembayaran Anda</p>
+        </div> --}}
     </div>
 </body>
 </html>
